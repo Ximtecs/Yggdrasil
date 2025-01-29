@@ -8,8 +8,6 @@ module CPUVectorOps
 #       2D arrays which call ddz will fall back to ddy 
 # ------------------------------------------------------------------------------------------------------------------------
 
-
-
 include("Prefactors.jl")
 using .Prefactors: pf2, pf4, pf6
 using LoopVectorization
@@ -19,25 +17,50 @@ export ddx_up, ddy_up, ddz_up, ddx_dn, ddy_dn, ddz_dn  # Export only what's nece
 
 #---------------------- ddx_up --------------------------------------------------------------------------------------------
 function ddx_up(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, order::Int)
-    if order == 2
-        return ddx_up_2nd(field, dx)
-    elseif order == 4
-        return ddx_up_4th(field, dx)
-    elseif order == 6
-        return ddx_up_6th(field, dx)
-    else
+    dims = size(field)
+    result = zeros(eltype(field), dims)
+
+    if !(order == 2 || order == 4 || order == 6)
         throw(ArgumentError("Unsupported order: $order"))
+    end 
+
+    if order == 2 && dims[1] > 1
+        ddx_up_2nd(field, result, dx)
+    elseif order == 4 && dims[1] > 3
+        ddx_up_4th(field, result, dx)
+    elseif order == 6 && dims[1] > 5
+        ddx_up_6th(field, result, dx)
+    end
+    return result
+end
+
+function ddx_up(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, order::Int)
+
+    dims = size(field)
+    dims_res = size(result)
+
+    if dims != dims_res
+        throw(ArgumentError("ddx_up: Input and output arrays must have the same dimensions"))
+    end
+
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
+
+
+    if order == 2 && dims[1] > 1
+        ddx_up_2nd(field, result, dx)
+    elseif order == 4 && dims[1] > 3
+        ddx_up_4th(field, result, dx)
+    elseif order == 6 && dims[1] > 5
+        ddx_up_6th(field, result, dx)
     end
 end
 
-function ddx_up_2nd(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
+function ddx_up_2nd(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf2.a / dx
-    if dims[1] < 3
-        return result  # Return zeros for insufficient data
-    end
     if ndims == 1
         @turbo for i in 1:dims[1]-1
             result[i] = pfa * (field[i+1] - field[i])
@@ -54,20 +77,14 @@ function ddx_up_2nd(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 
-function ddx_up_4th(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
+function ddx_up_4th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf4.a / dx
     pfb = pf4.b / dx
-    
-    if dims[1] < 4
-        return result  # Return zeros for insufficient data
-    end
     
     if ndims == 1
         @turbo for i in 2:dims[1]-2
@@ -87,21 +104,15 @@ function ddx_up_4th(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 
-function ddx_up_6th(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
+function ddx_up_6th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf6.a / dx
     pfb = pf6.b / dx
     pfc = pf6.c / dx
-
-    if dims[1] < 6
-        return result  # Return zeros for insufficient data
-    end
 
     if ndims == 1
         @turbo for i in 3:dims[1]-3
@@ -124,7 +135,6 @@ function ddx_up_6th(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -133,34 +143,61 @@ end
 #---------------------- ddy_up --------------------------------------------------------------------------------------------
 
 function ddy_up(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat, order::Int)
-
-
-    #------------- for 1D arrays use ddx 
-    if length(size(field)) == 1
-        return ddx_up(field, dy, order)
-    end 
-
-
-    if order == 2
-        return ddy_up_2nd(field, dy)
-    elseif order == 4
-        return ddy_up_4th(field, dy)
-    elseif order == 6
-        return ddy_up_6th(field, dy)
-    else
-        throw(ArgumentError("Unsupported order: $order"))
-    end
-end
-
-function ddy_up_2nd(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
     result = zeros(eltype(field), dims)
-    pfa = pf2.a / dy
+    
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
+    #------------- for 1D arrays use ddx 
+    if ndims == 1
+        ddx_up(field, result, dy, order)
+        return result
+    end 
 
-    if dims[2] < 3
-        return result  # Return zeros for insufficient data
+
+    if order == 2 && dims[2] > 1
+        ddy_up_2nd(field, result, dy)
+    elseif order == 4 && dims[2] > 3
+        ddy_up_4th(field, result, dy)
+    elseif order == 6 && dims[2] > 5
+        ddy_up_6th(field, result, dy)
     end
+    return result
+end
+
+function ddy_up(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dy::AbstractFloat, order::Int)
+    dims = size(field)
+    ndims = length(dims)
+    dims_res = size(result)
+
+    if dims != dims_res
+        throw(ArgumentError("ddy_up: Input and output arrays must have the same dimensions"))
+    end
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
+    #------------- for 1D arrays use ddx 
+    if ndims == 1
+        ddx_up(field, result, dy, order)
+        return
+    end 
+
+
+    if order == 2 && dims[2] > 1
+        ddy_up_2nd(field, result, dy)
+    elseif order == 4 && dims[2] > 3
+        ddy_up_4th(field, result, dy)
+    elseif order == 6 && dims[2] > 5
+        ddy_up_6th(field, result, dy)
+    end
+end
+
+function ddy_up_2nd(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
+    dims = size(field)
+    ndims = length(dims)
+    pfa = pf2.a / dy
 
     if ndims == 2
         @turbo for i in 1:dims[1], j in 1:dims[2]-1
@@ -173,20 +210,14 @@ function ddy_up_2nd(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 
-function ddy_up_4th(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
+function ddy_up_4th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf4.a / dy
     pfb = pf4.b / dy
-
-    if dims[2] < 4
-        return result  # Return zeros for insufficient data
-    end
 
     if ndims == 2
         @turbo for i in 1:dims[1], j in 2:dims[2]-2
@@ -201,21 +232,16 @@ function ddy_up_4th(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 
-function ddy_up_6th(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
+function ddy_up_6th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf6.a / dy
     pfb = pf6.b / dy
     pfc = pf6.c / dy
 
-    if dims[2] < 6
-        return result  # Return zeros for insufficient data
-    end
     if ndims == 2
         @turbo for i in 1:dims[1], j in 3:dims[2]-3
             result[i, j] = pfa * (field[i, j+1] - field[i, j]) +
@@ -231,7 +257,6 @@ function ddy_up_6th(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -239,37 +264,73 @@ end
 #---------------------- ddz_up --------------------------------------------------------------------------------------------
 
 function ddz_up(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat, order::Int)
+    dims = size(field)
+    result = zeros(eltype(field), dims)
+
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
+
 
     #------------- for 1D arrays use ddx 
     if length(size(field)) == 1
-        return ddx_up(field, dz, order)
+        ddx_up(field, result, dz, order)
+        return result
     end 
 
     #------------- for 2D arrays use ddy 
     if length(size(field)) == 2
-        return ddy_up(field, dz, order)
+        ddy_up(field, result, dz, order)
+        return result
     end 
 
-    if order == 2
-        return ddz_up_2nd(field, dz)
-    elseif order == 4
-        return ddz_up_4th(field, dz)
-    elseif order == 6
-        return ddz_up_6th(field, dz)
-    else
+    if order == 2 && dims[3] > 1
+        ddz_up_2nd(field, result, dz)
+    elseif order == 4 && dims[3] > 3
+        ddz_up_4th(field, result, dz)
+    elseif order == 6 && dims[3] > 5
+        ddz_up_6th(field, result, dz)
+    end
+    return result
+end
+
+function ddz_up(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dz::AbstractFloat, order::Int)
+    dims = size(field)
+    ndims = length(dims)
+    dims_res = size(result)
+    if dims != dims_res
+        throw(ArgumentError("ddz_up: Input and output arrays must have the same dimensions"))
+    end
+    if !(order == 2 || order == 4 || order == 6)
         throw(ArgumentError("Unsupported order: $order"))
+    end 
+
+
+    #------------- for 1D arrays use ddx 
+    if ndims == 1
+        ddx_up(field, result, dz, order)
+        return 
+    end 
+
+    #------------- for 2D arrays use ddy 
+    if ndims== 2
+        ddy_up(field, result, dz, order)
+        return 
+    end 
+
+    if order == 2 && dims[3] > 1
+        ddz_up_2nd(field, result, dz)
+    elseif order == 4 && dims[3] > 3
+        ddz_up_4th(field, result, dz)
+    elseif order == 6 && dims[3] > 5
+        ddz_up_6th(field, result, dz)
     end
 end
 
-function ddz_up_2nd(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
+function ddz_up_2nd(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf2.a / dz
-
-    if dims[3] < 3
-        return result  # Return zeros for insufficient data
-    end
 
     if ndims == 3
         @turbo for i in 1:dims[1], j in 1:dims[2], k in 1:dims[3]-1
@@ -278,20 +339,14 @@ function ddz_up_2nd(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 
-function ddz_up_4th(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
+function ddz_up_4th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf4.a / dz
     pfb = pf4.b / dz
-
-    if dims[3] < 4
-        return result  # Return zeros for insufficient data
-    end
 
     if ndims == 3
         @turbo for i in 1:dims[1], j in 1:dims[2], k in 2:dims[3]-2
@@ -301,21 +356,15 @@ function ddz_up_4th(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 
-function ddz_up_6th(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
+function ddz_up_6th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf6.a / dz
     pfb = pf6.b / dz
     pfc = pf6.c / dz
-
-    if dims[3] < 6
-        return result  # Return zeros for insufficient data
-    end
 
     if ndims == 3
         @turbo for i in 1:dims[1], j in 1:dims[2], k in 3:dims[3]-3
@@ -326,32 +375,49 @@ function ddz_up_6th(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 #----------------------------------------------------------------------------------------------------------------------
 
 #---------------------- ddx_up --------------------------------------------------------------------------------------------
 function ddx_dn(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, order::Int)
-    if order == 2
-        return ddx_dn_2nd(field, dx)
-    elseif order == 4
-        return ddx_dn_4th(field, dx)
-    elseif order == 6
-        return ddx_dn_6th(field, dx)
-    else
+    dims = size(field)
+    result = zeros(eltype(field), dims)
+    if !(order == 2 || order == 4 || order == 6)
         throw(ArgumentError("Unsupported order: $order"))
+    end 
+    if order == 2 && dims[1] > 1
+        ddx_dn_2nd(field, result, dx)
+    elseif order == 4 && dims[1] > 3
+        ddx_dn_4th(field, result, dx)
+    elseif order == 6 && dims[1] > 5
+        ddx_dn_6th(field, result, dx)
+    end
+    return result
+end
+
+function ddx_dn(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, order::Int)
+    dims = size(field)
+    dims_res = size(result)
+    if dims != dims_res
+        throw(ArgumentError("ddx_dn: Input and output arrays must have the same dimensions"))
+    end
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
+    if order == 2 && dims[1] > 1
+        ddx_dn_2nd(field, result, dx)
+    elseif order == 4 && dims[1] > 3
+        ddx_dn_4th(field, result, dx)
+    elseif order == 6 && dims[1] > 5
+        ddx_dn_6th(field, result, dx)
     end
 end
 
-function ddx_dn_2nd(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
+function ddx_dn_2nd(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf2.a / dx
-    if dims[1] < 3
-        return result  # Return zeros for insufficient data
-    end
     if ndims == 1
         @turbo for i in 2:dims[1]
             result[i] = pfa * (field[i] - field[i-1])
@@ -368,20 +434,14 @@ function ddx_dn_2nd(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 
-function ddx_dn_4th(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
+function ddx_dn_4th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf4.a / dx
     pfb = pf4.b / dx
-    
-    if dims[1] < 4
-        return result  # Return zeros for insufficient data
-    end
     
     if ndims == 1
         @turbo for i in 3:dims[1]-1
@@ -401,21 +461,15 @@ function ddx_dn_4th(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 
-function ddx_dn_6th(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
+function ddx_dn_6th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf6.a / dx
     pfb = pf6.b / dx
     pfc = pf6.c / dx
-
-    if dims[1] < 6
-        return result  # Return zeros for insufficient data
-    end
 
     if ndims == 1
         @turbo for i in 4:dims[1]-2
@@ -438,7 +492,6 @@ function ddx_dn_6th(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -447,34 +500,59 @@ end
 #---------------------- ddy_up --------------------------------------------------------------------------------------------
 
 function ddy_dn(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat, order::Int)
-
-
-    #------------- for 1D arrays use ddx 
-    if length(size(field)) == 1
-        return ddx_dn(field, dy, order)
-    end 
-
-
-    if order == 2
-        return ddy_dn_2nd(field, dy)
-    elseif order == 4
-        return ddy_dn_4th(field, dy)
-    elseif order == 6
-        return ddy_dn_6th(field, dy)
-    else
-        throw(ArgumentError("Unsupported order: $order"))
-    end
-end
-
-function ddy_dn_2nd(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
     result = zeros(eltype(field), dims)
-    pfa = pf2.a / dy
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
 
-    if dims[2] < 3
-        return result  # Return zeros for insufficient data
+    #------------- for 1D arrays use ddx 
+    if ndims== 1
+        ddx_dn(field, result, dy, order)
+        return result
+    end 
+
+    if order == 2 && dims[2] > 1
+        ddy_dn_2nd(field, result, dy)
+    elseif order == 4 && dims[2] > 3
+        ddy_dn_4th(field, result, dy)
+    elseif order == 6 && dims[2] > 5
+        ddy_dn_6th(field, result, dy)
     end
+    return result
+end
+
+function ddy_dn(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dy::AbstractFloat, order::Int)
+    dims = size(field)
+    ndims = length(dims)
+    dims_res = size(result)
+    if dims != dims_res
+        throw(ArgumentError("ddy_dn: Input and output arrays must have the same dimensions"))
+    end
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
+
+    #------------- for 1D arrays use ddx 
+    if ndims== 1
+        ddx_dn(field, result, dy, order)
+        return
+    end 
+
+    if order == 2 && dims[2] > 1
+        ddy_dn_2nd(field, result, dy)
+    elseif order == 4 && dims[2] > 3
+        ddy_dn_4th(field, result, dy)
+    elseif order == 6 && dims[2] > 5
+        ddy_dn_6th(field, result, dy)
+    end
+end
+
+function ddy_dn_2nd(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
+    dims = size(field)
+    ndims = length(dims)
+    pfa = pf2.a / dy
 
     if ndims == 2
         @turbo for i in 1:dims[1], j in 2:dims[2]
@@ -487,20 +565,15 @@ function ddy_dn_2nd(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 
-function ddy_dn_4th(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
+function ddy_dn_4th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf4.a / dy
     pfb = pf4.b / dy
 
-    if dims[2] < 4
-        return result  # Return zeros for insufficient data
-    end
 
     if ndims == 2
         @turbo for i in 1:dims[1], j in 3:dims[2]-1
@@ -515,21 +588,16 @@ function ddy_dn_4th(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 
-function ddy_dn_6th(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
+function ddy_dn_6th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf6.a / dy
     pfb = pf6.b / dy
     pfc = pf6.c / dy
 
-    if dims[2] < 6
-        return result  # Return zeros for insufficient data
-    end
     if ndims == 2
         @turbo for i in 1:dims[1], j in 4:dims[2]-2
             result[i, j] = pfa * (field[i, j  ] - field[i, j-1]) +
@@ -545,7 +613,6 @@ function ddy_dn_6th(field::AbstractArray{<:AbstractFloat}, dy::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -553,37 +620,73 @@ end
 #---------------------- ddz_up --------------------------------------------------------------------------------------------
 
 function ddz_dn(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat, order::Int)
-
-    #------------- for 1D arrays use ddx 
-    if length(size(field)) == 1
-        return ddx_dn(field, dz, order)
-    end 
-
-    #------------- for 2D arrays use ddy 
-    if length(size(field)) == 2
-        return ddy_dn(field, dz, order)
-    end 
-
-    if order == 2
-        return ddz_dn_2nd(field, dz)
-    elseif order == 4
-        return ddz_dn_4th(field, dz)
-    elseif order == 6
-        return ddz_dn_6th(field, dz)
-    else
-        throw(ArgumentError("Unsupported order: $order"))
-    end
-end
-
-function ddz_dn_2nd(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
     result = zeros(eltype(field), dims)
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
+
+    #------------- for 1D arrays use ddx 
+    if ndims== 1
+        ddx_dn(field, result, dz, order)
+        return result
+    end 
+
+    #------------- for 2D arrays use ddy 
+    if ndims == 2
+        ddy_dn(field, result, dz, order)
+        return result
+    end 
+
+    if order == 2 && dims[3] > 1
+        ddz_dn_2nd(field, result, dz)
+    elseif order == 4 && dims[3] > 3
+        ddz_dn_4th(field, result, dz)
+    elseif order == 6 && dims[3] > 5
+        ddz_dn_6th(field, result, dz)
+    end
+    return result
+end
+
+
+function ddz_dn(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dz::AbstractFloat, order::Int)
+    dims = size(field)
+    ndims = length(dims)
+    dims_res = size(result)
+    if dims != dims_res
+        throw(ArgumentError("ddz_dn: Input and output arrays must have the same dimensions"))
+    end
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
+
+    #------------- for 1D arrays use ddx 
+    if ndims == 1
+        ddx_dn(field, result, dz, order)
+        return
+    end 
+
+    #------------- for 2D arrays use ddy 
+    if ndims == 2
+        ddy_dn(field, result, dz, order)
+        return
+    end 
+
+    if order == 2 && dims[3] > 1
+         ddz_dn_2nd(field, result, dz)
+    elseif order == 4 && dims[3] > 3
+        ddz_dn_4th(field, result, dz)
+    elseif order == 6 && dims[3] > 5
+        ddz_dn_6th(field, result, dz)
+    end
+end
+
+function ddz_dn_2nd(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
+    dims = size(field)
+    ndims = length(dims)
     pfa = pf2.a / dz
 
-    if dims[3] < 3
-        return result  # Return zeros for insufficient data
-    end
 
     if ndims == 3
         @turbo for i in 1:dims[1], j in 1:dims[2], k in 2:dims[3]
@@ -592,20 +695,16 @@ function ddz_dn_2nd(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 
-function ddz_dn_4th(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
+function ddz_dn_4th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf4.a / dz
     pfb = pf4.b / dz
 
-    if dims[3] < 4
-        return result  # Return zeros for insufficient data
-    end
+ 
 
     if ndims == 3
         @turbo for i in 1:dims[1], j in 1:dims[2], k in 3:dims[3]-1
@@ -615,21 +714,15 @@ function ddz_dn_4th(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 
-function ddz_dn_6th(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
+function ddz_dn_6th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
     dims = size(field)
     ndims = length(dims)
-    result = zeros(eltype(field), dims)
     pfa = pf6.a / dz
     pfb = pf6.b / dz
     pfc = pf6.c / dz
-
-    if dims[3] < 6
-        return result  # Return zeros for insufficient data
-    end
 
     if ndims == 3
         @turbo for i in 1:dims[1], j in 1:dims[2], k in 4:dims[3]-2
@@ -640,7 +733,6 @@ function ddz_dn_6th(field::AbstractArray{<:AbstractFloat}, dz::AbstractFloat)
     else
         throw(ArgumentError("Unsupported array dimension: $ndims"))
     end
-    return result
 end
 
 #----------------------------------------------------------------------------------------------------------------------
