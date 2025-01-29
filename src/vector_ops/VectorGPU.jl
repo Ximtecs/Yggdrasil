@@ -28,5 +28,29 @@ export ddx_up, ddy_up, ddz_upd, dx_dn, ddy_dn, ddz_dn
         throw(ArgumentError("NOT IMPLEMENTED YER"))
     end
 
+    function ddx_up!(result::AbstractArray{<:AbstractFloat}, field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, order::Int)
+        throw(ArgumentError("NOT IMPLEMENTED YET"))
+    end
+
+    function ddy_up!(result::AbstractArray{<:AbstractFloat}, field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, order::Int)
+        throw(ArgumentError("NOT IMPLEMENTED YET"))
+    end
+
+    function ddz_up!(result::AbstractArray{<:AbstractFloat}, field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, order::Int)
+        throw(ArgumentError("NOT IMPLEMENTED YET"))
+    end
+
+    function ddx_dn!(result::AbstractArray{<:AbstractFloat}, field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, order::Int)
+        throw(ArgumentError("NOT IMPLEMENTED YET"))
+    end
+
+    function ddy_dn!(result::AbstractArray{<:AbstractFloat}, field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, order::Int)
+        throw(ArgumentError("NOT IMPLEMENTED YET"))
+    end
+
+    function ddz_dn!(result::AbstractArray{<:AbstractFloat}, field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, order::Int)
+        throw(ArgumentError("NOT IMPLEMENTED YET"))
+    end
+
 
 end
