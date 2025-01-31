@@ -1,9 +1,11 @@
 using Test
+using LoopVectorization
+
 include("../../src/vector_ops/VectorOps.jl")
 
 
-using .VectorOps: CPU, GPU, ddx_up, ddy_up, ddz_up, ddx_dn, ddy_dn, ddz_dn
-
+using .VectorOps: CPU, GPU, ddx_up, ddy_up, ddz_up, ddx_dn, ddy_dn, ddz_dn,
+                  curl_up, curl_dn
 
 
 @testset "ddx_up Tests for CPUVectorOps" begin
@@ -392,3 +394,90 @@ end
     @test isapprox(result_3D, expected_3D; rtol=1e-5)
     #--------------------------------------------------------------------------------------
 end
+
+
+@testset "curl_up Tests for CPUVectorOps" begin
+    dx, dy, dz = pi/100, pi/100, pi/100  # Grid spacing
+    backend = CPU()
+
+    #------------- Define a 3D vector field -------------------
+    F_x(x, y, z) = sin(y) + z^2  # Function for Fx
+    F_y(x, y, z) = sin(z) + x^2  # Function for Fy
+    F_z(x, y, z) = sin(x) + y^2  # Function for Fz
+
+    # Analytical curl components
+    C_x(x, y, z) = 2 * (y + 0.5*dy) - cos(z + 0.5 * dz)  # Analytical Cx
+    C_y(x, y, z) = 2 * (z + 0.5*dz) - cos(x + 0.5 * dx)  # Analytical Cy
+    C_z(x, y, z) = 2 * (x + 0.5*dx) - cos(y + 0.5 * dy)  # Analytical Cz
+
+    x = 1.1pi:dx:(1.5π)
+    y = 0.6pi:dy:(1.0π)
+    z = 0.9pi:dz:(1.1π)
+    nx, ny, nz = length(x), length(y), length(z)  # Grid sizes
+    
+    input = zeros(3, nx, ny, nz)
+    expected_result = zeros(3, nx, ny, nz)
+    result = zeros(3, nx, ny, nz)
+    
+    for zi in 1:nz, yi in 1:ny, xi in 1:nx
+        x_val, y_val, z_val = x[xi], y[yi], z[zi]  # Extract grid values
+    
+        input[1, xi, yi, zi] = F_x(x_val, y_val, z_val) 
+        input[2, xi, yi, zi] = F_y(x_val, y_val, z_val) 
+        input[3, xi, yi, zi] = F_z(x_val, y_val, z_val) 
+    
+        expected_result[1, xi, yi, zi] = C_x(x_val, y_val, z_val)
+        expected_result[2, xi, yi, zi] = C_y(x_val, y_val, z_val)
+        expected_result[3, xi, yi, zi] = C_z(x_val, y_val, z_val)
+    end
+    
+    curl_up(backend, input, result, dx, dy, dz, 2)
+    @test isapprox(result[:,1:end-1,1:end-1,1:end-1], expected_result[:,1:end-1,1:end-1,1:end-1]; rtol=1e-5)
+    curl_up(backend, input, result, dx, dy, dz, 4)
+    @test isapprox(result[:,2:end-2,2:end-2,2:end-2], expected_result[:,2:end-2,2:end-2,2:end-2]; rtol=1e-5)
+    curl_up(backend, input, result, dx, dy, dz, 6)
+    @test isapprox(result[:,3:end-3,3:end-3,3:end-3], expected_result[:,3:end-3,3:end-3,3:end-3]; rtol=1e-5)
+end 
+
+@testset "curl_up Tests for CPUVectorOps" begin
+    dx, dy, dz = pi/100, pi/100, pi/100  # Grid spacing
+    backend = CPU()
+
+    #------------- Define a 3D vector field -------------------
+    F_x(x, y, z) = sin(y) + z^2  # Function for Fx
+    F_y(x, y, z) = sin(z) + x^2  # Function for Fy
+    F_z(x, y, z) = sin(x) + y^2  # Function for Fz
+
+    # Analytical curl components
+    C_x(x, y, z) = 2 * (y - 0.5*dy) - cos(z - 0.5 * dz)  # Analytical Cx
+    C_y(x, y, z) = 2 * (z - 0.5*dz) - cos(x - 0.5 * dx)  # Analytical Cy
+    C_z(x, y, z) = 2 * (x - 0.5*dx) - cos(y - 0.5 * dy)  # Analytical Cz
+
+    x = 0.6pi:dx:(1.0π)
+    y = 0.9pi:dy:(1.1π)
+    z = 1.1pi:dz:(1.5π)
+    nx, ny, nz = length(x), length(y), length(z)  # Grid sizes
+    
+    input = zeros(3, nx, ny, nz)
+    expected_result = zeros(3, nx, ny, nz)
+    result = zeros(3, nx, ny, nz)
+    
+    for zi in 1:nz, yi in 1:ny, xi in 1:nx
+        x_val, y_val, z_val = x[xi], y[yi], z[zi]  # Extract grid values
+    
+        input[1, xi, yi, zi] = F_x(x_val, y_val, z_val) 
+        input[2, xi, yi, zi] = F_y(x_val, y_val, z_val) 
+        input[3, xi, yi, zi] = F_z(x_val, y_val, z_val) 
+    
+        expected_result[1, xi, yi, zi] = C_x(x_val, y_val, z_val)
+        expected_result[2, xi, yi, zi] = C_y(x_val, y_val, z_val)
+        expected_result[3, xi, yi, zi] = C_z(x_val, y_val, z_val)
+    end
+    
+    curl_dn(backend, input, result, dx, dy, dz, 2)
+    @test isapprox(result[:,2:end,2:end,2:end], expected_result[:,2:end,2:end,2:end]; rtol=1e-5)
+    curl_dn(backend, input, result, dx, dy, dz, 4)
+    @test isapprox(result[:,3:end-1,3:end-1,3:end-1], expected_result[:,3:end-1,3:end-1,3:end-1]; rtol=1e-5)
+    curl_dn(backend, input, result, dx, dy, dz, 6)
+    @test isapprox(result[:,4:end-2,4:end-2,4:end-2], expected_result[:,4:end-2,4:end-2,4:end-2]; rtol=1e-5)
+end 
