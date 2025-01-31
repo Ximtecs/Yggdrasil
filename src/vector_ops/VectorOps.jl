@@ -6,12 +6,54 @@ include("VectorGPU.jl")
 
 
 export Backend, CPU, GPU, 
-      ddx_up, ddy_up, ddz_up, ddx_dn, ddy_dn, ddz_dn
+      ddx_up, ddy_up, ddz_up, ddx_dn, ddy_dn, ddz_dn,
+      curl_up, curl_dn
 
 # Define backend types
 abstract type Backend end
 struct CPU <: Backend end
 struct GPU <: Backend end
+
+
+function curl_up(backend::Backend, field, dx,dy,dz, order::Int)
+    if backend isa CPU
+        return CPUVectorOps.curl_up(field, dx, dy, dz, order)
+    elseif backend isa GPU
+        return GPUVectorOps.curl_up(field, dx, dy, dz, order)
+    else
+        throw(ArgumentError("Unsupported backend: $backend"))
+    end
+end
+
+function curl_dn(backend::Backend, field, dx,dy,dz, order::Int)
+    if backend isa CPU
+        return CPUVectorOps.curl_dn(field, dx, dy, dz, order)
+    elseif backend isa GPU
+        return GPUVectorOps.curl_dn(field, dx, dy, dz, order)
+    else
+        throw(ArgumentError("Unsupported backend: $backend"))
+    end
+end
+
+function curl_up(backend::Backend, field, result, dx,dy,dz, order::Int)
+    if backend isa CPU
+        return CPUVectorOps.curl_up(field, result, dx, dy, dz, order)
+    elseif backend isa GPU
+        return GPUVectorOps.curl_up(field, result, dx, dy, dz, order)
+    else
+        throw(ArgumentError("Unsupported backend: $backend"))
+    end
+end
+
+function curl_dn(backend::Backend, field, result, dx,dy,dz, order::Int)
+    if backend isa CPU
+        return CPUVectorOps.curl_dn(field, result, dx, dy, dz, order)
+    elseif backend isa GPU
+        return GPUVectorOps.curl_dn(field, result, dx, dy, dz, order)
+    else
+        throw(ArgumentError("Unsupported backend: $backend"))
+    end
+end
 
 
 

@@ -22,13 +22,159 @@ module CPUVectorOps
 #          2. f!(input, output, kwargs) -> This will write the result to the output array with no return value
 # ------------------------------------------------------------------------------------------------------------------------
 #-------------------------- Exported function signatures ----------------------------------------------------------------
-export ddx_up, ddy_up, ddz_up, ddx_dn, ddy_dn, ddz_dn
+export ddx_up, ddy_up, ddz_up, ddx_dn, ddy_dn, ddz_dn,
+       curl_up, curl_dn
 #----------------------------------------------------------------------------------------------------------------------
 #----------------- import prefacts for derivatives, interpolation, and Laplace operator -------------------------------
 include("Prefactors.jl")
 using .Prefactors: pf2, pf4, pf6
 using LoopVectorization
 #-------------------------------------------------------------------------------------------------------------------
+
+function curl_up(field::AbstractArray{<:AbstractFloat, 4}, dx::AbstractFloat, dy::AbstractFloat, dz::AbstractFloat, order::Int)
+    # Ensure the order is valid
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
+
+    dims = size(field)  # dims should be (3, Nx, Ny, Nz)
+    
+    if (dims[1] != 3) 
+        throw(ArgumentError("Curl_up: Expects first component by contant 3 components"))
+    end 
+
+    result = zeros(eltype(field), dims)
+
+    x_in = @view field[1,:,:,:]
+    y_in = @view field[2,:,:,:]
+    z_in = @view field[3,:,:,:]
+
+    # Use views for better performance
+    res_x = @view result[1,:,:,:]
+    res_y = @view result[2,:,:,:]
+    res_z = @view result[3,:,:,:]
+
+
+    curl_x_up(y_in, z_in, res_x, dy, dz, order)
+    curl_y_up(x_in, z_in, res_y, dx, dz, order)
+    curl_z_up(x_in, y_in, res_z, dx, dy, order)
+
+    return result
+end
+
+function curl_up(field::AbstractArray{<:AbstractFloat, 4}, result::AbstractArray{<:AbstractFloat, 4}, dx::AbstractFloat, dy::AbstractFloat, dz::AbstractFloat, order::Int)
+    # Ensure the order is valid
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
+
+    dims = size(field)  # dims should be (3, Nx, Ny, Nz)
+    
+    if (dims[1] != 3) 
+        throw(ArgumentError("Curl_up: Expects first component by contant 3 components"))
+    end 
+
+    x_in = @view field[1,:,:,:]
+    y_in = @view field[2,:,:,:]
+    z_in = @view field[3,:,:,:]
+
+    # Use views for better performance
+    res_x = @view result[1,:,:,:]
+    res_y = @view result[2,:,:,:]
+    res_z = @view result[3,:,:,:]
+
+
+    curl_x_up(y_in, z_in, res_x, dy, dz, order)
+    curl_y_up(x_in, z_in, res_y, dx, dz, order)
+    curl_z_up(x_in, y_in, res_z, dx, dy, order)
+end
+
+function curl_x_up(y::AbstractArray{<:AbstractFloat},z::AbstractArray{<:AbstractFloat}, out::AbstractArray{<:AbstractFloat}, dy::AbstractFloat, dz::AbstractFloat,order::Int)
+    out .= ddy_up(z,dy,order) .- ddz_up(y,dz,order)
+end
+function curl_y_up(x::AbstractArray{<:AbstractFloat}, z::AbstractArray{<:AbstractFloat}, out::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, dz::AbstractFloat, order::Int)
+    out .= ddz_up(x, dz, order) .- ddx_up(z, dx, order)
+end
+
+function curl_z_up(x::AbstractArray{<:AbstractFloat}, y::AbstractArray{<:AbstractFloat}, out::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, dy::AbstractFloat, order::Int)
+    out .= ddx_up(y, dx, order) .- ddy_up(x, dy, order)
+end
+
+function curl_dn(field::AbstractArray{<:AbstractFloat, 4}, dx::AbstractFloat, dy::AbstractFloat, dz::AbstractFloat, order::Int)
+    # Ensure the order is valid
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
+
+    dims = size(field)  # dims should be (3, Nx, Ny, Nz)
+    
+    if (dims[1] != 3) 
+        throw(ArgumentError("Curl_up: Expects first component by contant 3 components"))
+    end 
+
+    result = zeros(eltype(field), dims)
+
+    x_in = @view field[1,:,:,:]
+    y_in = @view field[2,:,:,:]
+    z_in = @view field[3,:,:,:]
+
+    # Use views for better performance
+    res_x = @view result[1,:,:,:]
+    res_y = @view result[2,:,:,:]
+    res_z = @view result[3,:,:,:]
+
+
+    curl_x_dn(y_in, z_in, res_x, dy, dz, order)
+    curl_y_dn(x_in, z_in, res_y, dx, dz, order)
+    curl_z_dn(x_in, y_in, res_z, dx, dy, order)
+
+    return result
+end
+
+function curl_dn(field::AbstractArray{<:AbstractFloat, 4}, result::AbstractArray{<:AbstractFloat, 4}, dx::AbstractFloat, dy::AbstractFloat, dz::AbstractFloat, order::Int)
+    # Ensure the order is valid
+    if !(order == 2 || order == 4 || order == 6)
+        throw(ArgumentError("Unsupported order: $order"))
+    end 
+
+    dims = size(field)  # dims should be (3, Nx, Ny, Nz)
+    
+    if (dims[1] != 3) 
+        throw(ArgumentError("Curl_up: Expects first component by contant 3 components"))
+    end 
+
+    x_in = @view field[1,:,:,:]
+    y_in = @view field[2,:,:,:]
+    z_in = @view field[3,:,:,:]
+
+    # Use views for better performance
+    res_x = @view result[1,:,:,:]
+    res_y = @view result[2,:,:,:]
+    res_z = @view result[3,:,:,:]
+
+
+    curl_x_dn(y_in, z_in, res_x, dy, dz, order)
+    curl_y_dn(x_in, z_in, res_y, dx, dz, order)
+    curl_z_dn(x_in, y_in, res_z, dx, dy, order)
+end
+
+function curl_x_dn(y::AbstractArray{<:AbstractFloat}, z::AbstractArray{<:AbstractFloat}, out::AbstractArray{<:AbstractFloat}, dy::AbstractFloat, dz::AbstractFloat, order::Int)
+    out .= ddy_dn(z, dy, order) .- ddz_dn(y, dz, order)
+end
+
+function curl_y_dn(x::AbstractArray{<:AbstractFloat}, z::AbstractArray{<:AbstractFloat}, out::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, dz::AbstractFloat, order::Int)
+    out .= ddz_dn(x, dz, order) .- ddx_dn(z, dx, order)
+end
+
+function curl_z_dn(x::AbstractArray{<:AbstractFloat}, y::AbstractArray{<:AbstractFloat}, out::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, dy::AbstractFloat, order::Int)
+    out .= ddx_dn(y, dx, order) .- ddy_dn(x, dy, order)
+end
+#---------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
 
 #---------------------- ddx_up --------------------------------------------------------------------------------------------
 function ddx_up(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, order::Int)
