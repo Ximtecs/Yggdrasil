@@ -6,14 +6,29 @@ module CPUVectorOps
 #                                      3rd dimension: z-direction
 #       1D arrays which call ddy or ddz will fall back to ddx
 #       2D arrays which call ddz will fall back to ddy 
+#--------------------
+#       The following functions are implemented:
+#                 upwind derivative: ddx_up, ddy_up, ddz_up
+#                 downwind derivative: ddx_dn, ddy_dn, ddz_dn
+#--------------------
+#       2nd, 4th and 6th order methods are implemented for each function.
+#       These functions should not be exported, but rather called by the exported functions
+#       Each function must take 'order' as an argument to specify the order of the derivative
+#       order signature should be given as integer:
+#                       order = 2, 4, 6
+#--------------------
+#       Multiple dispatch is used to enable two types of function calls:
+#          1. f(input, kwargs) -> This will create new output array and return it
+#          2. f!(input, output, kwargs) -> This will write the result to the output array with no return value
 # ------------------------------------------------------------------------------------------------------------------------
-
+#-------------------------- Exported function signatures ----------------------------------------------------------------
+export ddx_up, ddy_up, ddz_up, ddx_dn, ddy_dn, ddz_dn
+#----------------------------------------------------------------------------------------------------------------------
+#----------------- import prefacts for derivatives, interpolation, and Laplace operator -------------------------------
 include("Prefactors.jl")
 using .Prefactors: pf2, pf4, pf6
 using LoopVectorization
-
-export ddx_up, ddy_up, ddz_up, ddx_dn, ddy_dn, ddz_dn  # Export only what's necessary
-
+#-------------------------------------------------------------------------------------------------------------------
 
 #---------------------- ddx_up --------------------------------------------------------------------------------------------
 function ddx_up(field::AbstractArray{<:AbstractFloat}, dx::AbstractFloat, order::Int)
