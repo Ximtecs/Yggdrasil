@@ -227,12 +227,12 @@ function ddx_up_2nd(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
             result[i] = pfa * (field[i+1] - field[i])
         end
     elseif ndims == 2
-        @turbo for i in 1:dims[1]-1, j in 1:dims[2]
+        @turbo for j in 1:dims[2], i in 1:dims[1]-1
             result[i, j] = pfa * (field[i+1, j] - field[i, j])
         end
         
     elseif ndims == 3
-        @turbo for i in 1:dims[1]-1, j in 1:dims[2], k in 1:dims[3]
+        @turbo for k in 1:dims[3], j in 1:dims[2], i in 1:dims[1]-1
             result[i, j, k] = pfa * (field[i+1, j, k] - field[i, j, k])
         end
     else
@@ -253,12 +253,12 @@ function ddx_up_4th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
                         pfb * (field[i+2] - field[i-1])
         end
     elseif ndims == 2
-        @turbo for i in 2:dims[1]-2, j in 1:dims[2]
+        @turbo for j in 1:dims[2], i in 2:dims[1]-2
             result[i, j] = pfa * (field[i+1, j] - field[i, j]) +
                            pfb * (field[i+2, j] - field[i-1, j])
         end
     elseif ndims == 3
-        @turbo for i in 2:dims[1]-2, j in 1:dims[2], k in 1:dims[3]
+        @turbo for k in 1:dims[3], j in 1:dims[2], i in 2:dims[1]-2
             result[i, j, k] = pfa * (field[i+1, j, k] - field[i, j, k]) +
                               pfb * (field[i+2, j, k] - field[i-1, j, k])
         end
@@ -282,13 +282,13 @@ function ddx_up_6th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
                         pfc * (field[i+3] - field[i-2])
         end
     elseif ndims == 2
-        @turbo for i in 3:dims[1]-3, j in 1:dims[2]
+        @turbo for j in 1:dims[2], i in 3:dims[1]-3
             result[i, j] = pfa * (field[i+1, j] - field[i, j]) +
                            pfb * (field[i+2, j] - field[i-1, j]) +
                            pfc * (field[i+3, j] - field[i-2, j])
         end
     elseif ndims == 3
-        @turbo for i in 3:dims[1]-3, j in 1:dims[2], k in 1:dims[3]
+        @turbo for k in 1:dims[3], j in 1:dims[2], i in 3:dims[1]-3
             result[i, j, k] = pfa * (field[i+1, j, k] - field[i, j, k]) +
                               pfb * (field[i+2, j, k] - field[i-1, j, k]) +
                               pfc * (field[i+3, j, k] - field[i-2, j, k])
@@ -361,11 +361,11 @@ function ddy_up_2nd(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
     pfa = pf2.a / dy
 
     if ndims == 2
-        @turbo for i in 1:dims[1], j in 1:dims[2]-1
+        @turbo for j in 1:dims[2]-1, i in 1:dims[1]
             result[i, j] = pfa * (field[i, j+1] - field[i, j])
         end
     elseif ndims == 3
-        @turbo for i in 1:dims[1], j in 1:dims[2]-1, k in 1:dims[3]
+        @turbo for k in 1:dims[3], j in 1:dims[2]-1, i in 1:dims[1]
             result[i, j, k] = pfa * (field[i, j+1, k] - field[i, j, k])
         end
     else
@@ -381,12 +381,12 @@ function ddy_up_4th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
     pfb = pf4.b / dy
 
     if ndims == 2
-        @turbo for i in 1:dims[1], j in 2:dims[2]-2
+        @turbo for j in 2:dims[2]-2, i in 1:dims[1]
             result[i, j] = pfa * (field[i, j+1] - field[i, j]) +
                            pfb * (field[i, j+2] - field[i, j-1])
         end
     elseif ndims == 3
-        @turbo for i in 1:dims[1], j in 2:dims[2]-2, k in 1:dims[3]
+        @turbo for  k in 1:dims[3], j in 2:dims[2]-2, i in 1:dims[1]
             result[i, j, k] = pfa * (field[i, j+1, k] - field[i, j, k]) +
                               pfb * (field[i, j+2, k] - field[i, j-1, k])
         end
@@ -404,13 +404,13 @@ function ddy_up_6th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
     pfc = pf6.c / dy
 
     if ndims == 2
-        @turbo for i in 1:dims[1], j in 3:dims[2]-3
+        @turbo for  j in 3:dims[2]-3, i in 1:dims[1]
             result[i, j] = pfa * (field[i, j+1] - field[i, j]) +
                            pfb * (field[i, j+2] - field[i, j-1]) +
                            pfc * (field[i, j+3] - field[i, j-2])
         end
     elseif ndims == 3
-        @turbo for i in 1:dims[1], j in 3:dims[2]-3, k in 1:dims[3]
+        @turbo for k in 1:dims[3], j in 3:dims[2]-3, i in 1:dims[1]
             result[i, j, k] = pfa * (field[i, j+1, k] - field[i, j, k]) +
                               pfb * (field[i, j+2, k] - field[i, j-1, k]) +
                               pfc * (field[i, j+3, k] - field[i, j-2, k])
@@ -494,7 +494,7 @@ function ddz_up_2nd(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
     pfa = pf2.a / dz
 
     if ndims == 3
-        @turbo for i in 1:dims[1], j in 1:dims[2], k in 1:dims[3]-1
+        @turbo for k in 1:dims[3]-1, j in 1:dims[2], i in 1:dims[1]
             result[i, j, k] = pfa * (field[i, j, k+1] - field[i, j, k])
         end
     else
@@ -510,7 +510,7 @@ function ddz_up_4th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
     pfb = pf4.b / dz
 
     if ndims == 3
-        @turbo for i in 1:dims[1], j in 1:dims[2], k in 2:dims[3]-2
+        @turbo for k in 2:dims[3]-2, j in 1:dims[2], i in 1:dims[1]
             result[i, j, k] = pfa * (field[i, j, k+1] - field[i, j, k]) +
                               pfb * (field[i, j, k+2] - field[i, j, k-1])
         end
@@ -528,7 +528,7 @@ function ddz_up_6th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
     pfc = pf6.c / dz
 
     if ndims == 3
-        @turbo for i in 1:dims[1], j in 1:dims[2], k in 3:dims[3]-3
+        @turbo for k in 3:dims[3]-3, j in 1:dims[2], i in 1:dims[1]
             result[i, j, k] = pfa * (field[i, j, k+1] - field[i, j, k]) +
                               pfb * (field[i, j, k+2] - field[i, j, k-1]) +
                               pfc * (field[i, j, k+3] - field[i, j, k-2])
@@ -584,12 +584,12 @@ function ddx_dn_2nd(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
             result[i] = pfa * (field[i] - field[i-1])
         end
     elseif ndims == 2
-        @turbo for i in 2:dims[1], j in 1:dims[2]
+        @turbo for j in 1:dims[2], i in 2:dims[1]
             result[i, j] = pfa * (field[i, j] - field[i-1, j])
         end
         
     elseif ndims == 3
-        @turbo for i in 2:dims[1], j in 1:dims[2], k in 1:dims[3]
+        @turbo for k in 1:dims[3], j in 1:dims[2], i in 2:dims[1]
             result[i, j, k] = pfa * (field[i, j, k] - field[i-1, j, k])
         end
     else
@@ -610,12 +610,12 @@ function ddx_dn_4th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
                         pfb * (field[i+1] - field[i-2])
         end
     elseif ndims == 2
-        @turbo for i in 3:dims[1]-1, j in 1:dims[2]
+        @turbo for j in 1:dims[2], i in 3:dims[1]-1
             result[i, j] = pfa * (field[i, j] - field[i-1, j]) +
                            pfb * (field[i+1, j] - field[i-2, j])
         end
     elseif ndims == 3
-        @turbo for i in 3:dims[1]-1, j in 1:dims[2], k in 1:dims[3]
+        @turbo for k in 1:dims[3], j in 1:dims[2], i in 3:dims[1]-1
             result[i, j, k] = pfa * (field[i, j, k] - field[i-1, j, k]) +
                               pfb * (field[i+1, j, k] - field[i-2, j, k])
         end
@@ -639,13 +639,13 @@ function ddx_dn_6th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
                         pfc * (field[i+2] - field[i-3])
         end
     elseif ndims == 2
-        @turbo for i in 4:dims[1]-2, j in 1:dims[2]
+        @turbo for  j in 1:dims[2], i in 4:dims[1]-2
             result[i, j] = pfa * (field[i  , j] - field[i-1, j]) +
                            pfb * (field[i+1, j] - field[i-2, j]) +
                            pfc * (field[i+2, j] - field[i-3, j])
         end
     elseif ndims == 3
-        @turbo for i in 4:dims[1]-2, j in 1:dims[2], k in 1:dims[3]
+        @turbo for  k in 1:dims[3], j in 1:dims[2], i in 4:dims[1]-2
             result[i, j, k] = pfa * (field[i  , j, k] - field[i-1, j, k]) +
                               pfb * (field[i+1, j, k] - field[i-2, j, k]) +
                               pfc * (field[i+2, j, k] - field[i-3, j, k])
@@ -716,11 +716,11 @@ function ddy_dn_2nd(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
     pfa = pf2.a / dy
 
     if ndims == 2
-        @turbo for i in 1:dims[1], j in 2:dims[2]
+        @turbo for j in 2:dims[2], i in 1:dims[1]
             result[i, j] = pfa * (field[i, j] - field[i, j-1])
         end
     elseif ndims == 3
-        @turbo for i in 1:dims[1], j in 2:dims[2], k in 1:dims[3]
+        @turbo for k in 1:dims[3], j in 2:dims[2], i in 1:dims[1]
             result[i, j, k] = pfa * (field[i, j, k] - field[i, j-1, k])
         end
     else
@@ -737,12 +737,12 @@ function ddy_dn_4th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
 
 
     if ndims == 2
-        @turbo for i in 1:dims[1], j in 3:dims[2]-1
+        @turbo for j in 3:dims[2]-1, i in 1:dims[1]
             result[i, j] = pfa * (field[i, j  ] - field[i, j-1]) +
                            pfb * (field[i, j+1] - field[i, j-2])
         end
     elseif ndims == 3
-        @turbo for i in 1:dims[1], j in 3:dims[2]-1, k in 1:dims[3]
+        @turbo for  k in 1:dims[3], j in 3:dims[2]-1, i in 1:dims[1]
             result[i, j, k] = pfa * (field[i, j  , k] - field[i, j-1, k]) +
                               pfb * (field[i, j+1, k] - field[i, j-2, k])
         end
@@ -760,13 +760,13 @@ function ddy_dn_6th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
     pfc = pf6.c / dy
 
     if ndims == 2
-        @turbo for i in 1:dims[1], j in 4:dims[2]-2
+        @turbo for  j in 4:dims[2]-2,i in 1:dims[1]
             result[i, j] = pfa * (field[i, j  ] - field[i, j-1]) +
                            pfb * (field[i, j+1] - field[i, j-2]) +
                            pfc * (field[i, j+2] - field[i, j-3])
         end
     elseif ndims == 3
-        @turbo for i in 1:dims[1], j in 4:dims[2]-2, k in 1:dims[3]
+        @turbo for  k in 1:dims[3], j in 4:dims[2]-2, i in 1:dims[1]
             result[i, j, k] = pfa * (field[i, j  , k] - field[i, j-1, k]) +
                               pfb * (field[i, j+1, k] - field[i, j-2, k]) +
                               pfc * (field[i, j+2, k] - field[i, j-3, k])
@@ -850,7 +850,7 @@ function ddz_dn_2nd(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
 
 
     if ndims == 3
-        @turbo for i in 1:dims[1], j in 1:dims[2], k in 2:dims[3]
+        @turbo for k in 2:dims[3], j in 1:dims[2], i in 1:dims[1]
             result[i, j, k] = pfa * (field[i, j, k] - field[i, j, k-1])
         end
     else
@@ -868,7 +868,7 @@ function ddz_dn_4th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
  
 
     if ndims == 3
-        @turbo for i in 1:dims[1], j in 1:dims[2], k in 3:dims[3]-1
+        @turbo for k in 3:dims[3]-1, j in 1:dims[2], i in 1:dims[1]
             result[i, j, k] = pfa * (field[i, j, k  ] - field[i, j, k-1]) +
                               pfb * (field[i, j, k+1] - field[i, j, k-2])
         end
@@ -886,7 +886,7 @@ function ddz_dn_6th(field::AbstractArray{<:AbstractFloat}, result::AbstractArray
     pfc = pf6.c / dz
 
     if ndims == 3
-        @turbo for i in 1:dims[1], j in 1:dims[2], k in 4:dims[3]-2
+        @turbo for k in 4:dims[3]-2, j in 1:dims[2], i in 1:dims[1]
             result[i, j, k] = pfa * (field[i, j, k  ] - field[i, j, k-1]) +
                               pfb * (field[i, j, k+1] - field[i, j, k-2]) +
                               pfc * (field[i, j, k+2] - field[i, j, k-3])
