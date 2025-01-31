@@ -1,9 +1,10 @@
 module ScalingHL_mod
 
+    using Printf
     include("BaseUnits.jl")
-    using BaseUnits_mod
+    using .BaseUnits_mod: BaseUnits
 
-    export ScalingHL, print_all_HL, print_basic_info
+    export ScalingHL, print_all_HL, print_basic_info, BaseUnits
 
     """
         ScalingHL
