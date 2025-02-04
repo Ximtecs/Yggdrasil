@@ -27,7 +27,6 @@ export ddx_up, ddy_up, ddz_up, ddx_dn, ddy_dn, ddz_dn,
 #----------------------------------------------------------------------------------------------------------------------
 #----------------- import prefacts for derivatives, interpolation, and Laplace operator -------------------------------
 include("Prefactors.jl")
-using .Prefactors: pf2, pf4, pf6
 using LoopVectorization
 #-------------------------------------------------------------------------------------------------------------------
 

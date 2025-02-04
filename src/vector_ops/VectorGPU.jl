@@ -1,7 +1,7 @@
 module GPUVectorOps_mod
 
 include("Prefactors.jl")
-using .Prefactors: pf2, pf4, pf6
+#using .Prefactors: pf2, pf4, pf6
 
 
 export ddx_up, ddy_up, ddz_upd, dx_dn, ddy_dn, ddz_dn,
