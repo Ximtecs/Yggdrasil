@@ -1,13 +1,3 @@
-using Test
-using LoopVectorization
-
-include("../../src/vector_ops/VectorOps.jl")
-
-
-using .VectorOps: CPU, GPU, ddx_up, ddy_up, ddz_up, ddx_dn, ddy_dn, ddz_dn,
-                  curl_up, curl_dn
-
-
 @testset "ddx_up Tests for CPUVectorOps" begin
     dx = 0.01  # Spacing in x-direction
     backend = CPU()
@@ -439,7 +429,7 @@ end
     @test isapprox(result[:,3:end-3,3:end-3,3:end-3], expected_result[:,3:end-3,3:end-3,3:end-3]; rtol=1e-5)
 end 
 
-@testset "curl_up Tests for CPUVectorOps" begin
+@testset "curl_dn Tests for CPUVectorOps" begin
     dx, dy, dz = pi/100, pi/100, pi/100  # Grid spacing
     backend = CPU()
 
