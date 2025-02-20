@@ -26,7 +26,7 @@ pf2 = prefactors(0.5, 0.0,0.0,                # For interpolation
                             0.0,0.0, 1.0, -2.0, 1.0, 0.0,0.0)    # For laplacian
 
 pf4 = prefactors(9.0/16.0, -1.0/16.0, 0.0,    # For interpolation
-                            27.0/24.0, -1.0/24.0, 8.0,              # For derivatives
+                            27.0/24.0, -1.0/24.0, 0.0,              # For derivatives
                             0.0,-1.0/12.0, 16.0/12.0, -30.0/12.0, 16.0/12.0, -1.0/12.0,0.0) # For laplacian
 
 
