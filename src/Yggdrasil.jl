@@ -59,9 +59,14 @@
         #-------- vars --------------------
         #----------------------------------
         #------- structs ------------------
-    export BaseUnits, ScalingHL
+    export BaseUnits, ScalingHL, ScalingCGS
+    export code_units, known_real_units, real_unit_input, ratios_and_scaling
         #----------------------------------
         #------- functions ----------------
+    export find_real_units_CGS, find_real_units_HL # to go from code to real units
+    export get_scaleHL, get_scaleCGS # to get code unit from real units
+    export set_macro_particle_weights # for setting particle per cell and cell size to Scaling 
+    export print_basic_info, print_all_HL, print_all_CGS # for printing scaling info
         #----------------------------------
     #---------------------------------------------------------- 
 
