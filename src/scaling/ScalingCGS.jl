@@ -1,10 +1,11 @@
-"""
-    ScalingHL
 
-A struct for handling scaling in the HL (Heaviside-Lorentz) unit system.
 """
-mutable struct ScalingHL
-    system::String  # Unit system ('HL' in this case)
+    ScalingCGS
+
+A struct for handling scaling in the CGS (Centimeter-Gram-Second) unit system.
+"""
+mutable struct ScalingCGS
+    system::String  # Unit system ('CGS' in this case)
 
     # Input physical parameters
     number_density_real::Float64       # Number density [cm^-3]
@@ -164,7 +165,21 @@ mutable struct ScalingHL
     k_M  :: Float64 
     k_H  :: Float64
 
-    function ScalingHL(base_units :: BaseUnits, n = 1e15, l=1e8, T=1e6, Te = 1e6, Tp = 1e6, B = 10, l_s = 1e8, ρ_s = 1e-13, t_s  = 100, Temp_s = 1, ds = 0.1, PPC = 128 )
+
+
+    # function ScalingCGS(base_units, number_density=1e15, length=1e8, temperature=1e6, temperature_e=1e6, temperature_p=1e6, B_flux=1e1, length_scale=3e8, mass_density_scale=1e-13, time_scale=1.0, temperature_scale=1e6)
+    #     system = base_units.system
+    #     obj = new(system, number_density, length, temperature, temperature_e, temperature_p, B_flux, length_scale, mass_density_scale, time_scale,temperature_scale, base_units)
+    #     # Additional initialization and calculations for derived values
+    #     copy_base_units(obj)
+    #     set_derived_real_values(obj)
+    #     set_scaling_factors(obj)
+    #     calculate_code_values(obj)
+    #     set_Maxwell_Lorentz(obj)        
+    #     return obj
+    # end
+
+    function ScalingCGS(base_units :: BaseUnits, n = 1e15, l=1e8, T=1e6, Te = 1e6, Tp = 1e6, B = 10, l_s = 1e8, ρ_s = 1e-13, t_s  = 100, Temp_s = 1, ds = 0.1, PPC = 128 )
         system = base_units.system
         obj = new(system, n, l, T, Te, Tp, B, l_s, ρ_s, t_s,Temp_s, base_units)
         copy_base_units(obj)
@@ -176,7 +191,8 @@ mutable struct ScalingHL
         return obj
     end 
 
-        function ScalingHL(base_units :: BaseUnits, n = 1e15, l=1e8, T=1e6, Te = 1e6, Tp = 1e6, B = 10, l_s = 1e8, ρ_s = 1e-13, t_s  = 100, Temp_s = 1)
+
+    function ScalingCGS(base_units :: BaseUnits, n = 1e15, l=1e8, T=1e6, Te = 1e6, Tp = 1e6, B = 10, l_s = 1e8, ρ_s = 1e-13, t_s  = 100, Temp_s = 1)
         system = base_units.system
         obj = new(system, n, l, T, Te, Tp, B, l_s, ρ_s, t_s,Temp_s, base_units)
         copy_base_units(obj)
@@ -186,15 +202,16 @@ mutable struct ScalingHL
         set_Maxwell_Lorentz(obj)     
         return obj
     end 
+
 end
 
 """
     copy_base_units
 
-Copies the base unit from the BaseUnits struct to the ScalingHL struct
+Copies the base unit from the BaseUnits struct to the ScalingCGS struct
 """
-function copy_base_units(obj::ScalingHL)
-    # Copy base unit values from BaseUnits to ScalingHL
+function copy_base_units(obj::ScalingCGS)
+    # Copy base unit values from BaseUnits to ScalingCGS
     obj.eps_0_real = obj.base_units.eps_0   # Permittivity of free space [unitless in CGS]
     obj.mu_0_real  = obj.base_units.mu_0    # Permeability of free space [s^2 cm^-2 in CGS]
     obj.c_real     = obj.base_units.c       # Speed of light [cm s^-1]
@@ -221,7 +238,7 @@ Calcualtes all real values used in the scaling struct
         - temperature_p
         - B_flux
 """
-function set_derived_real_values(obj::ScalingHL)
+function set_derived_real_values(obj::ScalingCGS)
     #Calculate mu_real
     # Note -we calculate this to account for scaled electron masses which may change mu
     obj.mu_real = ( (obj.m_e_real + obj.m_p_real)  / 2. ) /  obj.m_u_real # assuming only protons and electrons
@@ -230,14 +247,14 @@ function set_derived_real_values(obj::ScalingHL)
     obj.mass_density_real = obj.number_density_real * 2 * obj.mu_real * obj.m_u_real
 
     # Calculate time scale [s] - Length scale divided by Alfven velocity
-    obj.time_real = obj.length_real / (obj.B_flux_real / sqrt( obj.mass_density_real))
+    obj.time_real = obj.length_real / (obj.B_flux_real / sqrt(4 * π * obj.mass_density_real))
 
     # Calculate characteristic velocity [cm/s]
     obj.u_real = obj.length_real / obj.time_real
 
 
     # Calculate Alfven velocity [cm/s] and rescale... 
-    obj.v_a_real = obj.B_flux_real / sqrt(obj.mass_density_real)
+    obj.v_a_real = obj.B_flux_real / sqrt(4 * π * obj.mass_density_real)
     obj.v_a_real *= obj.c_real / sqrt(obj.v_a_real^2 + obj.c_real^2) # rescaling only changes the actual value if v_a is close to the speed of light
     #TODO - double check scaling does not change anything
 
@@ -248,8 +265,8 @@ function set_derived_real_values(obj::ScalingHL)
     # Calculate frequencies [rad/s]
     obj.electron_gyro_freq_real = obj.e_real * obj.B_flux_real / (obj.m_e_real * obj.c_real)
     obj.proton_gyro_freq_real = obj.e_real * obj.B_flux_real / (obj.m_p_real * obj.c_real)
-    obj.electron_plasma_freq_real = obj.e_real * sqrt(obj.number_density_real / obj.m_e_real)
-    obj.proton_plasma_freq_real = obj.e_real * sqrt(obj.number_density_real / obj.m_p_real)
+    obj.electron_plasma_freq_real = obj.e_real * sqrt(4 * π * obj.number_density_real / obj.m_e_real)
+    obj.proton_plasma_freq_real = obj.e_real * sqrt(4 * π * obj.number_density_real / obj.m_p_real)
 
     # Calculate lengths [cm]
     obj.skin_depth_real = obj.c_real / obj.electron_plasma_freq_real
@@ -268,7 +285,7 @@ function set_derived_real_values(obj::ScalingHL)
     obj.pressure_real = obj.number_density_real * obj.k_B_real * obj.temperature_real * 2 # [ Ba ]
 end
 
-function set_scaling_factors(obj::ScalingHL)
+function set_scaling_factors(obj::ScalingCGS)
     # Length scalings
     obj.skin_depth_scaling = obj.length_scaling
     obj.skin_depth_p_scaling = obj.length_scaling
@@ -318,7 +335,7 @@ function set_scaling_factors(obj::ScalingHL)
     obj.eV_scaling = obj.energy_scaling
 end
 
-function calculate_code_values(obj::ScalingHL)
+function calculate_code_values(obj::ScalingCGS)
     # Fundamental constants code values
     obj.G_code = obj.G_real / obj.G_scaling
     obj.k_B_code = obj.k_B_real / obj.k_B_scaling
@@ -374,24 +391,23 @@ end
 
 
 
-function set_macro_particle_weights(obj::ScalingHL, ds, per_cell)
+function set_macro_particle_weights(obj::ScalingCGS, ds, per_cell)
     obj.ds = ds
     obj.per_cell = per_cell
 
-    obj.weight_scaled = obj.number_density_code / per_cell
+    obj.weight_scaled = obj.number_density_code * ds^3 / per_cell
 
     obj.weight_scaled_mass_proton = obj.weight_scaled * obj.m_p_code
     obj.weight_scaled_mass_electron = obj.weight_scaled * obj.m_e_code
     obj.weight_scaled_charge = obj.weight_scaled * obj.e_code
 
-
     obj.rho_n_ratio = 1. / (2. * obj.mu_code * obj.m_u_code)
 end
 
 
-function set_Maxwell_Lorentz(obj:: ScalingHL)
-    obj.k_E = 1. / (4 * pi )
-    obj.k_B = 1. / ( obj.c_code * 4 * pi ) 
+function set_Maxwell_Lorentz(obj:: ScalingCGS)
+    obj.k_E = 1. 
+    obj.k_B = 1. / obj.c_code
     obj.k_F = 1. / obj.c_code
 
     obj.k_D = 1. 
@@ -400,7 +416,7 @@ function set_Maxwell_Lorentz(obj:: ScalingHL)
 end 
 
 
-function print_Maxwell_Lorentz(obj :: ScalingHL)
+function print_Maxwell_Lorentz(obj :: ScalingCGS)
     @printf("\n Maxwell Lorents Factors used in code:\n")
     @printf("%-50s = % .4e \n", " k_E = ", obj.k_E)
     @printf("%-50s = % .4e \n", " k_B = ", obj.k_B)
@@ -410,7 +426,7 @@ function print_Maxwell_Lorentz(obj :: ScalingHL)
     @printf("%-50s = % .4e \n", " k_H = ", obj.k_H)
 end
 
-function print_Macro_particle_weights(obj :: ScalingHL)
+function print_Macro_particle_weights(obj :: ScalingCGS)
     @printf("\n Macro particle weights:\n")
     @printf("%-50s = % .4e \n", "                          ds = ", obj.ds           )
     @printf("%-50s = % .4e \n", "                    per_cell = ", obj.per_cell     )
@@ -421,7 +437,7 @@ function print_Macro_particle_weights(obj :: ScalingHL)
     @printf("%-50s = % .4e \n", "                 rho_n_ratio = ", obj.rho_n_ratio)
 end
 
-function print_fundamentals(obj::ScalingHL)
+function print_fundamentals(obj::ScalingCGS)
     @printf("\n Fundamental physical constants:\n")
     @printf("%-50s = % .4e % .4e % .4e\n", "        Gravitational Constant [ cm^3 g^-1 s^-2 ]", obj.G_real, obj.G_scaling, obj.G_code)
     @printf("%-50s = % .4e % .4e % .4e\n", "          Boltzmann's Constant [ erg K^-1 ]", obj.k_B_real, obj.k_B_scaling, obj.k_B_code)
@@ -438,7 +454,7 @@ function print_fundamentals(obj::ScalingHL)
 end
 
 
-function print_defining_constants(obj::ScalingHL)
+function print_defining_constants(obj::ScalingCGS)
     @printf("\n Defining Constants:\n")
     @printf("%-50s = % .4e % .4e % .4e\n", "                 Number Desity [ cm^3 ]", obj.number_density_real, obj.number_density_scaling, obj.number_density_code)
     @printf("%-50s = % .4e % .4e % .4e\n", "         Characteristic Length [ cm ]", obj.length_real, obj.length_scaling, obj.length_code)
@@ -449,7 +465,7 @@ function print_defining_constants(obj::ScalingHL)
 end
 
 
-function print_velocities(obj::ScalingHL)
+function print_velocities(obj::ScalingCGS)
     @printf("\n Velocities:\n")
     @printf("%-50s = % .4e % .4e % .4e\n", "       Characteristic velocity [ cm s^-1 ]", obj.u_real, obj.u_scaling, obj.u_code)
     @printf("%-50s = % .4e % .4e % .4e\n", "               Alfven velocity [ cm s^-1 ]", obj.v_a_real, obj.v_a_scaling, obj.v_a_code)
@@ -458,7 +474,7 @@ function print_velocities(obj::ScalingHL)
 end
 
 
-function print_frequencies(obj::ScalingHL)
+function print_frequencies(obj::ScalingCGS)
     @printf("\n Frequencies:\n")
     @printf("%-50s = % .4e % .4e % .4e\n", "     electron gyro frequency   [ rad s^-1 ]", obj.electron_gyro_freq_real, obj.electron_gyro_freq_scaling, obj.electron_gyro_freq_code)
     @printf("%-50s = % .4e % .4e % .4e\n", "       proton gyro frequency   [ rad s^-1 ]", obj.proton_gyro_freq_real, obj.proton_gyro_freq_scaling, obj.proton_gyro_freq_code)
@@ -468,7 +484,7 @@ end
 
 
 
-function print_lengths(obj::ScalingHL)
+function print_lengths(obj::ScalingCGS)
     @printf("\n Lengths:\n")
     @printf("%-50s = % .4e % .4e % .4e\n", "           electron skin depth [ cm ]", obj.skin_depth_real, obj.skin_depth_scaling, obj.skin_depth_code)
     @printf("%-50s = % .4e % .4e % .4e\n", "             proton skin depth [ cm ]", obj.skin_depth_p_real, obj.skin_depth_p_scaling, obj.skin_depth_p_code)
@@ -478,7 +494,7 @@ function print_lengths(obj::ScalingHL)
     @printf("%-50s = % .4e % .4e % .4e\n", "            proton gyro radius [ cm ]", obj.p_gyro_radiues_real, obj.p_gyro_radiues_scaling, obj.p_gyro_radiues_code)
 end
 
-function print_other(obj::ScalingHL)
+function print_other(obj::ScalingCGS)
     @printf("\n Other:\n")
     @printf("%-50s = % .4e % .4e % .4e\n", "                  Mass density [ g cm^-3 ]", obj.mass_density_real, obj.mass_density_scaling, obj.mass_density_code)
     @printf("%-50s = % .4e % .4e % .4e\n", "           Characteristic mass [ g ]", obj.mass_real, obj.mass_scaling, obj.mass_code)
@@ -489,7 +505,7 @@ function print_other(obj::ScalingHL)
     @printf("%-50s = % .4e % .4e % .4e\n", "      Characteristic  pressure [ Ba ]", obj.pressure_real, obj.pressure_scaling, obj.pressure_code)
 end
 
-function print_all_HL(obj::ScalingHL)
+function print_all_CGS(obj::ScalingCGS)
     print_Maxwell_Lorentz(obj)
     print_Macro_particle_weights(obj)
     print_fundamentals(obj)
@@ -500,7 +516,7 @@ function print_all_HL(obj::ScalingHL)
     print_other(obj)
 end
 
-function print_basic_info(obj::ScalingHL)
+function print_basic_info(obj::ScalingCGS)
     println("lenght                 = ", obj.length_real)
     println("number_density         = ", obj.number_density_real)
     println("B                      = ", obj.B_flux_real)
