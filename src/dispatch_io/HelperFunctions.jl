@@ -369,3 +369,7 @@ end
 function drop_unit_dims(x::AbstractArray)
     return dropdims(x, dims = tuple( (d for d in 1:ndims(x) if size(x,d) == 1)...));
 end
+
+function drop_unit_dims(x::Dict{String, Array{Float32}})
+    return Dict(k => dropdims(v, dims = tuple((d for d in 1:ndims(v) if size(v, d) == 1)...)) for (k, v) in x)
+end
