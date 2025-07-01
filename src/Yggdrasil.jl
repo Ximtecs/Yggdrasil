@@ -7,7 +7,8 @@
     using StaticArrays
 
 
-     include("io/Timer_mod.jl")
+    include("io/Timer_mod.jl")
+    include("dispatch_io/DispatchIO.jl")
     include("vector_ops/VectorOps.jl")
     include("scaling/Scaling.jl")
     include("solvers/PIC/ParticlePusher.jl")
@@ -36,6 +37,27 @@
         #----------------------------------
         #------- functions ----------------
     export print_timings
+        #----------------------------------
+    #---------------------------------------------------------- 
+
+    #---------- DISPATCH IO ---------------------------------------- 
+        #------- macros -------------------
+        #----------------------------------
+        #-------- vars --------------------
+        #----------------------------------
+        #------- structs ------------------
+        export IDX_NML, IO_NML, SNAPSHOT_NML, NBOR_NML, Patch_NML,
+              Particles_NML, Snapshot_metadata
+        #----------------------------------
+        #------- functions ----------------
+        export load_patch, load_snapshot, load_snapshot_particles
+        export load_multiple_snapshots_particles, load_multiple_snapshots
+        export read_snapshot
+        export get_idx_value, get_xyz, get_ds
+        export get_area
+        export print_info
+        export drop_unit_dims
+        export find_patch
         #----------------------------------
     #---------------------------------------------------------- 
 
