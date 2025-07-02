@@ -9,9 +9,11 @@ include("SnapshotParser.jl")
 include("IDXConversing.jl")
 include("HelperFunctions.jl")
 include("CartesianGrid.jl")
+include("Scaling.jl")
 
 include("LoadPatch.jl")
 include("LoadSnapshot.jl")
 include("LoadSnapshotParticles.jl")
 include("LoadMultipleSnapshots.jl")
 include("LoadMultipleSnapshotsParticles.jl")
+
