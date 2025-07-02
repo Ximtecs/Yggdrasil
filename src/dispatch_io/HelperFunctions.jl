@@ -170,7 +170,19 @@ end
 #----------- Find the first patch in the snapshot where the point lies within -------
 function find_patch(Snapshot_meta::Snapshot_metadata, point::AbstractVector{<:AbstractFloat})
     for patch in Snapshot_meta.PATCHES
-        if in_patch(patch, point)
+        if in_patch(patch, point) 
+            return patch
+        end
+    end
+    return nothing
+end
+#------------------------------------------------------------------------------------
+
+#----------- Find the first patch in the snapshot where the point lies within -------
+function find_patch(Snapshot_meta::Snapshot_metadata, point::AbstractVector{<:AbstractFloat},
+                    level::Int)
+    for patch in Snapshot_meta.PATCHES
+        if in_patch(patch, point) && patch.LEVEL == level
             return patch
         end
     end
@@ -189,6 +201,20 @@ function find_patch(Snapshot_meta::Snapshot_metadata, point::AbstractVector{<:Ab
     return nothing
 end
 #-------------------------------------------------------------------------------------------
+
+#----------- Find a patch in a list of neighbohrs where a point is within the neighbohr --------
+function find_patch(Snapshot_meta::Snapshot_metadata, point::AbstractVector{<:AbstractFloat}, NBOR_IDS::Vector{Int},
+                    level::Int)
+    for id in NBOR_IDS
+        index = findfirst(patch -> patch.ID == id, Snapshot_meta.PATCHES)
+        if index !== nothing && in_patch(Snapshot_meta.PATCHES[index], point) && Snapshot_meta.PATCHES[index].LEVEL == level
+            return Snapshot_meta.PATCHES[index]
+        end
+    end
+    return nothing
+end
+#-------------------------------------------------------------------------------------------
+
 
 #------------ return patch struct based on ID ----------------
 function find_patch(Snapshot_meta::Snapshot_metadata, patch_ID::Int)
