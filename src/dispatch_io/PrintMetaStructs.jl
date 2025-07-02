@@ -127,7 +127,9 @@ function print_info(metadata::Snapshot_metadata)
     print_info(metadata.SNAPSHOT)
     println("\nIDX:               ")
     print_info(metadata.IDX)
-    println("        NV_MHD:      ", metadata.NV_MHD)
+    println("\nScaling:               ")
+    print_info(metadata.SCALING)
+    println("\n      NV_MHD:      ", metadata.NV_MHD)
     println("\nNumber of PATCHES: ", metadata.n_patches)
     println("\n Folder:           ", metadata.folder)
     
@@ -138,4 +140,29 @@ function print_info(metadata::Snapshot_metadata)
             println("\nParticle Folder:   ", metadata.PARTICLE_FOLDER)
         end
     end
+end
+
+
+"""
+Print the contents of a `ScalingParams` struct in a formatted way.
+"""
+function print_info(s::SCALING_NML)
+    println("N_P_REAL:            ", s.N_P_REAL)
+    println("L_REAL:              ", s.L_REAL)
+    println("TEMP_REAL:           ", s.TEMP_REAL)
+    println("B_REAL:              ", s.B_REAL)
+    println("MU_REAL:             ", s.MU_REAL)
+    println("ELECTRON_TEMP_REAL:  ", s.ELECTRON_TEMP_REAL)
+    println("ION_TEMP_REAL:       ", s.ION_TEMP_REAL)
+    println("L scaling:           ", s.L)
+    println("D scaling:           ", s.D)
+    println("T scaling:           ", s.T)
+    println("Q_E_SCALE:           ", s.Q_E_SCALE)
+    println("M_E_SCALE:           ", s.M_E_SCALE)
+    println("MU_0_SCALE:          ", s.MU_0_SCALE)
+    println("EPS_0_SCALE:         ", s.EPS_0_SCALE)
+    println("SYSTEM:              ", s.SYSTEM)
+    println("PER_CELL:            ", s.PER_CELL)
+    println("SPECIES:             ", s.SPECIES)
+    println("DS:                  ", s.DS)
 end
