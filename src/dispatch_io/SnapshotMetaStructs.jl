@@ -40,6 +40,30 @@ struct IO_NML
     DO_PARTICLES :: Bool
 end
 
+"""
+Holds physical and normalised scaling parameters from params.nml
+"""
+struct SCALING_NML
+    N_P_REAL::Float64
+    L_REAL::Float64
+    TEMP_REAL::Float64
+    B_REAL::Float64
+    MU_REAL::Float64
+    ELECTRON_TEMP_REAL::Float64
+    ION_TEMP_REAL::Float64
+    L::Float64
+    D::Float64
+    T::Float64
+    Q_E_SCALE::Float64
+    M_E_SCALE::Float64
+    MU_0_SCALE::Float64
+    EPS_0_SCALE::Float64
+    SYSTEM::String
+    PER_CELL::Int
+    SPECIES::Int
+    DS::Float64
+end
+
 struct SNAPSHOT_NML
     IOFORMAT::Int
     IOUT::Int
@@ -122,6 +146,7 @@ struct Snapshot_metadata
     IO :: IO_NML
     SNAPSHOT:: SNAPSHOT_NML
     IDX :: IDX_NML
+    SCALING :: SCALING_NML
     n_patches :: Int
     n_pic_patches :: Int
     PATCHES :: Vector{Patch_NML}
