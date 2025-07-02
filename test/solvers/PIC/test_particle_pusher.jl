@@ -20,9 +20,9 @@ ds = 0.1
 PPC = 128
 
 
-scaling = ScalingHL(base; n=n, l=l, T=T, Te=T, Tp=T, B=B, 
-                    l_s=l_s, ρ_s=ρ_s, t_s=t_s, Temp_s=temp_s, 
-                    ds =ds, PPC = PPC)
+scaling = ScalingHL(base, n, l, T, T, T, B, 
+                    l_s, ρ_s, t_s, temp_s, 
+                    ds, PPC)
 
 c = scaling.c_code
 k_F = scaling.k_F
