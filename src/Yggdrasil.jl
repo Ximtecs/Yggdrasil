@@ -5,6 +5,7 @@
     using LinearAlgebra
     using LoopVectorization
     using StaticArrays
+    using Interpolations
 
 
     include("io/Timer_mod.jl")
@@ -12,6 +13,7 @@
     include("vector_ops/VectorOps.jl")
     include("scaling/Scaling.jl")
     include("solvers/PIC/ParticlePusher.jl")
+    include("processing/Processing.jl")
 
 
     #---------- folder ---------------------------------------- 
@@ -89,6 +91,21 @@
     export get_scaleHL, get_scaleCGS # to get code unit from real units
     export set_macro_particle_weights # for setting particle per cell and cell size to Scaling 
     export print_basic_info, print_all_HL, print_all_CGS # for printing scaling info
+        #----------------------------------
+    #---------------------------------------------------------- 
+
+    #---------- folder ---------------------------------------- 
+        #------- macros -------------------
+        #----------------------------------
+        #-------- vars --------------------
+        #----------------------------------
+        #------- structs ------------------
+        #----------------------------------
+        #------- functions ----------------
+        export get_line, generate_line_plane
+        export interpolate_to_line, interpolate_to_plane
+        export mom_to_vel!, vel_to_mom!
+        export rotate_aligned_vectors! 
         #----------------------------------
     #---------------------------------------------------------- 
 
