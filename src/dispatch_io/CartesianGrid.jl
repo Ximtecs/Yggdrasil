@@ -293,7 +293,7 @@ function get_area( Snapshot_meta::Snapshot_metadata,
 
     #------------- if negative integer index, set to 1 -------------
     for i in 1:3
-        if llc_int[i] <= 0
+        if llc_int[i] <= 0 || urc_int[i] <= 0
             llc_int[i] = 1
             urc_int[i] = 1
 
@@ -302,6 +302,123 @@ function get_area( Snapshot_meta::Snapshot_metadata,
         end
     end 
     #---------------------------------------------------------------
+
+    return llc_int, urc_int, area_llc_fixed, area_urc_fixed
+end
+
+
+"""
+    get_area_from_size(Snapshot_meta, midpoint, size, level)
+
+Compute grid-aligned area bounds given a physical size (in code units).
+
+# Arguments:
+- `Snapshot_meta::Snapshot_metadata`: Metadata of the snapshot.
+- `midpoint::Vector{Float64}`: Centre of the area, e.g., `[x, y, z]`.
+- `size::Vector{Float64}`: Total size of the area in each dimension (in code units).
+- `level::Int`: Refinement level to use.
+
+# Returns:
+- `llc_int::Vector{Int}`: Lower-left corner as integer grid indices.
+- `urc_int::Vector{Int}`: Upper-right corner as integer grid indices.
+- `area_llc_fixed::Vector{Float64}`: Adjusted lower-left corner (floored to grid).
+- `area_urc_fixed::Vector{Float64}`: Adjusted upper-right corner (ceiled to grid).
+"""
+function get_area(
+    Snapshot_meta::Snapshot_metadata,
+    midpoint::Vector{Float64},
+    size::Vector{Float64},
+    level::Int
+)
+    @assert length(midpoint) == 3 "midpoint must have 3 values (x, y, z)"
+    @assert length(size) == 3 "size must have 3 values (dx, dy, dz)"
+    @assert all(size .>= 0) "size must contain only positive values"
+
+    ds = get_ds(Snapshot_meta, level)
+    patch_size = get_patch_float_size(Snapshot_meta, level)
+
+    half_size = 0.5 .* size
+
+    area_llc = midpoint .- half_size
+    area_urc = midpoint .+ half_size
+
+    area_llc_fixed = floor.(area_llc ./ patch_size) .* patch_size .+ ds
+    area_urc_fixed = ceil.(area_urc ./ patch_size) .* patch_size
+
+    llc_int = [Int(area_llc_fixed[1] / ds[1]),
+               Int(area_llc_fixed[2] / ds[2]),
+               Int(area_llc_fixed[3] / ds[3])]
+
+    urc_int = [Int(area_urc_fixed[1] / ds[1]),
+               Int(area_urc_fixed[2] / ds[2]),
+               Int(area_urc_fixed[3] / ds[3])]
+
+    for i in 1:3
+        if llc_int[i] <= 0 || urc_int[i] <= 0
+            llc_int[i] = 1
+            urc_int[i] = 1
+            area_llc_fixed[i] = 0.0
+            area_urc_fixed[i] = 0.0
+        end
+    end
+
+    return llc_int, urc_int, area_llc_fixed, area_urc_fixed
+end
+
+
+"""
+    get_area_from_size(Snapshot_meta, midpoint, size, level)
+
+Compute grid-aligned area bounds given a physical size (in code units).
+
+# Arguments:
+- `Snapshot_meta::Snapshot_metadata`: Metadata of the snapshot.
+- `midpoint::Vector{Float64}`: Centre of the area, e.g., `[x, y, z]`.
+- `size::Vector{Float64}`: Total size of the area in each dimension (in code units).
+- `level::Int`: Refinement level to use.
+
+# Returns:
+- `llc_int::Vector{Int}`: Lower-left corner as integer grid indices.
+- `urc_int::Vector{Int}`: Upper-right corner as integer grid indices.
+- `area_llc_fixed::Vector{Float64}`: Adjusted lower-left corner (floored to grid).
+- `area_urc_fixed::Vector{Float64}`: Adjusted upper-right corner (ceiled to grid).
+"""
+function get_area(
+    Snapshot_meta::Snapshot_metadata,
+    midpoint::Vector{Float64},
+    size::Float64,
+    level::Int
+)
+    @assert length(midpoint) == 3 "midpoint must have 3 values (x, y, z)"
+    @assert size .>= 0 "size must contain only positive values"
+
+    ds = get_ds(Snapshot_meta, level)
+    patch_size = get_patch_float_size(Snapshot_meta, level)
+
+    half_size = 0.5 * size
+
+    area_llc = midpoint .- half_size
+    area_urc = midpoint .+ half_size
+
+    area_llc_fixed = floor.(area_llc ./ patch_size) .* patch_size .+ ds
+    area_urc_fixed = ceil.(area_urc ./ patch_size) .* patch_size
+
+    llc_int = [Int(area_llc_fixed[1] / ds[1]),
+               Int(area_llc_fixed[2] / ds[2]),
+               Int(area_llc_fixed[3] / ds[3])]
+
+    urc_int = [Int(area_urc_fixed[1] / ds[1]),
+               Int(area_urc_fixed[2] / ds[2]),
+               Int(area_urc_fixed[3] / ds[3])]
+
+    for i in 1:3
+        if llc_int[i] <= 0 || urc_int[i] <= 0
+            llc_int[i] = 1
+            urc_int[i] = 1
+            area_llc_fixed[i] = 0.0
+            area_urc_fixed[i] = 0.0
+        end
+    end
 
     return llc_int, urc_int, area_llc_fixed, area_urc_fixed
 end
