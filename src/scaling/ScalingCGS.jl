@@ -508,6 +508,7 @@ end
 function print_all_CGS(obj::ScalingCGS)
     print_Maxwell_Lorentz(obj)
     print_Macro_particle_weights(obj)
+    @printf("\n\t\t\t\t\t\t\tReal      Scaling      Code")
     print_fundamentals(obj)
     print_defining_constants(obj)
     print_velocities(obj)
