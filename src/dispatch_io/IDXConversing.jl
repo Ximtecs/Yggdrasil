@@ -8,6 +8,12 @@ function get_idx_value(idx::IDX_NML, key::String)
         "PX" => :PX, "px" => :PX, "mom_x" => :PX, "mom x" => :PX, "momentum x" => :PX, "Momentum X" => :PX, "momentum x component" => :PX, "Momentum X Component" => :PX,
         "PY" => :PY, "py" => :PY, "mom_y" => :PX, "mom y" => :PX, "momentum y" => :PY, "Momentum Y" => :PY, "momentum y component" => :PY, "Momentum Y Component" => :PY,
         "PZ" => :PZ, "pz" => :PZ, "mom_z" => :PX, "mom z" => :PX, "momentum z" => :PZ, "Momentum Z" => :PZ, "momentum z component" => :PZ, "Momentum Z Component" => :PZ,
+        #------- vx, vy, and vz are often used for velocity components -------
+        # NOTE - this does not mean the variables are velocities, they are still momenta
+        "VX" => :PX, "Vx" => :PX, "vx" => :PX, "velocity x" => :PX, "Velocity X" => :PX, "velocity x component" => :PX, "Velocity X Component" => :PX,
+        "VY" => :PY, "Vy" => :PY, "vy" => :PY, "velocity y" => :PY, "Velocity Y" => :PY, "velocity y component" => :PY, "Velocity Y Component" => :PY,
+        "VZ" => :PZ, "Vz" => :PZ, "vz" => :PZ, "velocity z" => :PZ, "Velocity Z" => :PZ, "velocity z component" => :PZ, "Velocity Z Component" => :PZ,
+        #----------------------------------------------------------------------
         "BX" => :BX, "Bx" => :BX, "bx" => :BX, "magnetic field x" => :BX, "Magnetic Field X" => :BX, "magnetic field x component" => :BX, "Magnetic Field X Component" => :BX,
         "BY" => :BY, "By" => :BY, "by" => :BY, "magnetic field y" => :BY, "Magnetic Field Y" => :BY, "magnetic field y component" => :BY, "Magnetic Field Y Component" => :BY,
         "BZ" => :BZ, "Bz" => :BZ, "bz" => :BZ, "magnetic field z" => :BZ, "Magnetic Field Z" => :BZ, "magnetic field z component" => :BZ, "Magnetic Field Z Component" => :BZ,
