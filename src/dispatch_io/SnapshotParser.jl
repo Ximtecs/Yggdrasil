@@ -92,6 +92,30 @@ function parse_IO_NML(params :: String)
     return IO_params
 end
 
+function parse_scaling_params(params :: String)
+    dict = parse_params(params)
+    return SCALING_NML(
+        parse_value(dict["N_P_REAL"], Float64),
+        parse_value(dict["L_REAL"], Float64),
+        parse_value(dict["TEMP_REAL"], Float64),
+        parse_value(dict["B_REAL"], Float64),
+        parse_value(dict["MU_REAL"], Float64),
+        parse_value(dict["ELECTRON_TEMP_REAL"], Float64),
+        parse_value(dict["ION_TEMP_REAL"], Float64),
+        parse_value(dict["L"], Float64),
+        parse_value(dict["D"], Float64),
+        parse_value(dict["T"], Float64),
+        parse_value(dict["Q_E_SCALE"], Float64),
+        parse_value(dict["M_E_SCALE"], Float64),
+        parse_value(dict["MU_0_SCALE"], Float64),
+        parse_value(dict["EPS_0_SCALE"], Float64),
+        parse_value(dict["SYSTEM"], String),
+        parse_value(dict["PER_CELL"], Int),
+        parse_value(dict["SPECIES"], Int),
+        parse_value(dict["DS"], Float64)
+    )
+end
+
 function parse_IDX_NML(params :: String)
     dict = parse_params(params)
 
@@ -137,6 +161,9 @@ function parse_NBOR_NML(params :: String)
 
     return NBOR_params
 end
+
+
+
 
 function parse_PATCH_NML(params :: String, NBOR_params :: NBOR_NML, data_pos :: Int, data_file :: String)
     dict = parse_params(params)
@@ -207,6 +234,7 @@ function parse_snapshot_nml(file_path::String)
     IO_params = parse_IO_NML(IO_content)
     IDX_params = parse_IDX_NML(IDX_content)
     Snapshot_params = parse_SNAPSHOT_NML(SNAPSHOT_content)
+
 
     return IO_params, IDX_params, Snapshot_params
 end 
@@ -303,6 +331,14 @@ function parse_unit_system(file)
 end 
 
 
+function parse_scaling(file)
+    content = read(file, String)
+    params_list = parse_name_content_NML(content)
+    scaling_content = [content for (name,content) in params_list if name == "SCALING_PA"][1]
+    scaling_params = parse_scaling_params(scaling_content)
+    return scaling_params
+end 
+
 #-------------- parse all meta information from a snapshot folder ------------------------------
 function read_snapshot(data_folder :: String, snap :: Int)
 
@@ -311,9 +347,11 @@ function read_snapshot(data_folder :: String, snap :: Int)
 
     params_file = data_folder * "params.nml"
     system = parse_unit_system(params_file)
+    scaling_params = parse_scaling(params_file)
 
     snapshot_nml_file = snap_folder * "snapshot.nml"
     IO_params, IDX_params, Snapshot_params = parse_snapshot_nml(snapshot_nml_file)
+    
 
 
     patches_params = []
@@ -421,7 +459,7 @@ function read_snapshot(data_folder :: String, snap :: Int)
 
 
 
-    Snapshot_meta = Snapshot_metadata(IO_params, Snapshot_params, IDX_params,
+    Snapshot_meta = Snapshot_metadata(IO_params, Snapshot_params, IDX_params, scaling_params,
                                      n_patches, n_pic_patches, patches_params, snap_folder,
                                      DO_PIC, DO_PARTICLES, NV_PIC, NV_MHD, N_PARTICLES, n_particle_patches,
                                      particle_folder, particles_params, system, level_min, level_max)
