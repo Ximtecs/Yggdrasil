@@ -179,19 +179,6 @@ mutable struct ScalingCGS
     #     return obj
     # end
 
-    function ScalingCGS(base_units :: BaseUnits, n = 1e15, l=1e8, T=1e6, Te = 1e6, Tp = 1e6, B = 10, l_s = 1e8, ρ_s = 1e-13, t_s  = 100, Temp_s = 1, ds = 0.1, PPC = 128 )
-        system = base_units.system
-        obj = new(system, n, l, T, Te, Tp, B, l_s, ρ_s, t_s,Temp_s, base_units)
-        copy_base_units(obj)
-        set_derived_real_values(obj)
-        set_scaling_factors(obj)
-        calculate_code_values(obj)
-        set_Maxwell_Lorentz(obj)     
-        set_macro_particle_weights(obj, ds, PPC)
-        return obj
-    end 
-
-
     function ScalingCGS(base_units :: BaseUnits, n = 1e15, l=1e8, T=1e6, Te = 1e6, Tp = 1e6, B = 10, l_s = 1e8, ρ_s = 1e-13, t_s  = 100, Temp_s = 1)
         system = base_units.system
         obj = new(system, n, l, T, Te, Tp, B, l_s, ρ_s, t_s,Temp_s, base_units)

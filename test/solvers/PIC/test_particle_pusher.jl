@@ -21,8 +21,8 @@ PPC = 128
 
 
 scaling = ScalingHL(base, n, l, T, T, T, B, 
-                    l_s, ρ_s, t_s, temp_s, 
-                    ds, PPC)
+                    l_s, ρ_s, t_s, temp_s)
+set_macro_particle_weights(scaling, ds, PPC)
 
 c = scaling.c_code
 k_F = scaling.k_F

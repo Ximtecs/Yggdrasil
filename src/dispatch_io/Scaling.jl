@@ -27,16 +27,18 @@ function get_dispatch_scaling(scaling_nml :: SCALING_NML)
     if system == "HL"
         base_units = BaseUnits("HL")
         scale_base_units(base_units, eps_0_scale, mu_0_scale, m_e_scale, q_e_scale)
-        return ScalingHL(base_units, n, l, T, Te, Ti, B,
-                         l_scale, d_scale, t_scale, temp_scale,
-                         ds, PPC)
+        scaling = ScalingHL(base_units, n, l, T, Te, Ti, B,
+                         l_scale, d_scale, t_scale, temp_scale)
+        set_macro_particle_weights(scaling, ds, PPC)
+        return scaling
 
     elseif system == "CGS"
         base_units = BaseUnits("CGS")
         scale_base_units(base_units, eps_0_scale, mu_0_scale, m_e_scale, q_e_scale)
-        return ScalingCGS(base_units, n, l, T, Te, Ti, B,
-                          l_scale, d_scale, t_scale, temp_scale,
-                          ds, PPC)
+        scaling = ScalingCGS(base_units, n, l, T, Te, Ti, B,
+                         l_scale, d_scale, t_scale, temp_scale)
+        set_macro_particle_weights(scaling, ds, PPC)
+        return scaling
     else
         error("Unknown system: $system")
     end 
