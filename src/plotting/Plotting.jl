@@ -4,3 +4,4 @@ include("SingleHeatmap.jl")
 include("MultiHeatmap.jl")
 
 include("SingleLine.jl")
+include("MultiLine.jl")
