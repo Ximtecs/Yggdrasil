@@ -8,6 +8,7 @@ include("ValueParsing.jl")
 include("SnapshotParser.jl")
 include("IDXConversing.jl")
 include("HelperFunctions.jl")
+include("FindPatchesLine.jl")
 include("CartesianGrid.jl")
 include("Scaling.jl")
 
