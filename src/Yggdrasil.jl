@@ -64,6 +64,8 @@
         export drop_unit_dims
         export find_patch
         export find_patches_line
+        export find_patches_square
+        export find_patches_cube
         export get_dispatch_scaling
         #----------------------------------
     #---------------------------------------------------------- 
