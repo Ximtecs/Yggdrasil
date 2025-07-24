@@ -153,7 +153,7 @@ end
 #------------------------------------------------------------------------------------------------
 
 """
-    plot_lines(data; kwargs...)
+    plot_line(data; kwargs...)
 
 Plot multiple lines from either a 2D data matrix or a vector of line vectors.
 
