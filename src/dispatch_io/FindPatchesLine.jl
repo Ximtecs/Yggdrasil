@@ -51,6 +51,8 @@ function find_patches_line(
     start_point::AbstractVector{<:AbstractFloat},
     end_point::AbstractVector{<:AbstractFloat},
 )
+    @assert length(start_point) == 3 "start_point must have 3 values (x, y, z)"
+    @assert length(end_point) == 3 "end_point must have 3 values (x, y, z)"
     patches = Patch_NML[]
     for patch in Snapshot_meta.PATCHES
         if line_intersects_patch(start_point, end_point, patch)
@@ -71,6 +73,8 @@ function find_patches_line(
     end_point::AbstractVector{<:AbstractFloat},
     level::Int,
 )
+    @assert length(start_point) == 3 "start_point must have 3 values (x, y, z)"
+    @assert length(end_point) == 3 "end_point must have 3 values (x, y, z)"
     patches = Patch_NML[]
     for patch in Snapshot_meta.PATCHES
         if patch.LEVEL == level && line_intersects_patch(start_point, end_point, patch)
