@@ -63,6 +63,7 @@
         export print_info
         export drop_unit_dims
         export find_patch
+        export find_patches_line
         export get_dispatch_scaling
         #----------------------------------
     #---------------------------------------------------------- 
