@@ -46,10 +46,11 @@ function _convert_points(points, expected_rows)
 end
 
 function _bounding_box(mat)
-    mins = vec(mapreduce(min, dims=1, mat))
-    maxs = vec(mapreduce(max, dims=1, mat))
+    mins = vec(reduce(min, eachcol(mat)))
+    maxs = vec(reduce(max, eachcol(mat)))
     return mins, maxs
 end
+
 
 function _boxes_intersect(mins, maxs, patch::Patch_NML)
     pmin = patch.LLC_NAT
