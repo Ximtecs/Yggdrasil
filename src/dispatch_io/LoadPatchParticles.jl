@@ -169,3 +169,20 @@ function load_patch_particles(Snapshot_meta::Snapshot_metadata, patch_IDs::Vecto
 end
 #--------------------------------------------------------------------------------
 
+
+
+function load_patch_particles(
+    Snapshot_meta::Snapshot_metadata,
+    patch::Patch_NML
+)
+    return load_patch_particles(Snapshot_meta, patch.ID)
+end
+
+function load_patch_particles(
+    Snapshot_meta::Snapshot_metadata,
+    patches::Vector{Patch_NML},
+    as_list::Bool=false,
+)
+    IDs = [p.ID for p in patches]
+    return load_patch_particles(Snapshot_meta, IDs; as_list=as_list)
+end
