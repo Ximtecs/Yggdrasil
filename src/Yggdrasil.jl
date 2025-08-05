@@ -56,6 +56,7 @@
         #----------------------------------
         #------- functions ----------------
         export load_patch, load_snapshot, load_snapshot_particles
+        export load_patch_particles
         export load_multiple_snapshots_particles, load_multiple_snapshots
         export read_snapshot
         export get_idx_value, get_xyz, get_ds
