@@ -24,18 +24,24 @@ patch3 = make_patch(3, [0.0,1.0,0.0], [1.0,1.0,1.0], 1)
 meta = make_snapshot([patch1, patch2, patch3])
 
 @testset "square and cube patch search" begin
-    square = [[0.5,0.5,0.5], [1.5,0.5,0.5], [1.5,1.5,0.5], [0.5,1.5,0.5]]
+    square = [[0.0,0.0,0.5], [2.0,0.0,0.5], [2.0,1.0,0.5], [0.0,1.0,0.5]]
     patches = find_patches_square(meta, square; all_levels=true)
-    @test length(patches) == 3
+    @test Set(p.ID for p in patches) == Set([1,2])
     patches_lvl = find_patches_square(meta, square; level=1)
-    @test Set(p.ID for p in patches_lvl) == Set([2,3])
+    @test length(patches_lvl) == 1 && patches_lvl[1].ID == 2
+    square_perm = [square[3], square[1], square[4], square[2]]
+    patches_perm = find_patches_square(meta, square_perm; all_levels=true)
+    @test Set(p.ID for p in patches_perm) == Set(p.ID for p in patches)
 
-    cube = [[1.2,0.2,0.2],[1.8,0.2,0.2],[1.8,0.8,0.2],[1.2,0.8,0.2],
-            [1.2,0.2,0.8],[1.8,0.2,0.8],[1.8,0.8,0.8],[1.2,0.8,0.8]]
+    cube = [[1.0,0.0,0.0],[2.0,0.0,0.0],[2.0,1.0,0.0],[1.0,1.0,0.0],
+            [1.0,0.0,1.0],[2.0,0.0,1.0],[2.0,1.0,1.0],[1.0,1.0,1.0]]
     cube_patches = find_patches_cube(meta, cube; all_levels=true)
     @test length(cube_patches) == 1 && cube_patches[1].ID == 2
     cube_lvl = find_patches_cube(meta, cube; level=1)
     @test length(cube_lvl) == 1 && cube_lvl[1].ID == 2
+    cube_perm = [cube[3], cube[1], cube[4], cube[2], cube[7], cube[5], cube[8], cube[6]]
+    cube_patches_perm = find_patches_cube(meta, cube_perm; all_levels=true)
+    @test Set(p.ID for p in cube_patches_perm) == Set(p.ID for p in cube_patches)
 end
 
 @testset "line patch search" begin
