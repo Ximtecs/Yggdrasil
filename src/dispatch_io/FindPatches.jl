@@ -63,19 +63,25 @@ function _boxes_intersect(mins, maxs, patch::Patch_NML)
 end
 
 """
-    find_patches_square(Snapshot_meta, points)
+    find_patches_square(Snapshot_meta, points; level, all_levels=false)
 
-Return all patches for which the square defined by `points` intersects the patch.
-`points` can be a 4×3 matrix or a vector of four 3-component vectors.
+Return patches for which the square defined by `points` intersects the patch. If
+`all_levels` is `true` patches from all refinement levels are considered. Otherwise,
+the search is restricted to the specified `level` (defaults to
+`Snapshot_meta.LEVELMIN`). `points` can be a 4×3 matrix or a vector of four
+3-component vectors.
 """
 function find_patches_square(
     Snapshot_meta::Snapshot_metadata,
-    points::Union{AbstractMatrix{<:AbstractFloat},Vector{<:AbstractVector{<:AbstractFloat}}},
+    points::Union{AbstractMatrix{<:AbstractFloat},Vector{<:AbstractVector{<:AbstractFloat}}};
+    level::Union{Int,Nothing}=nothing,
+    all_levels::Bool=false,
 )
     mat = _convert_points(points, 4)
+    lvl = level === nothing ? Snapshot_meta.LEVELMIN : level
     patches = Patch_NML[]
     for patch in Snapshot_meta.PATCHES
-        if square_intersects_patch(mat, patch)
+        if (all_levels || patch.LEVEL == lvl) && square_intersects_patch(mat, patch)
             push!(patches, patch)
         end
     end
@@ -83,59 +89,25 @@ function find_patches_square(
 end
 
 """
-    find_patches_square(Snapshot_meta, points, level)
+    find_patches_cube(Snapshot_meta, points; level, all_levels=false)
 
-As above but restricts the search to patches at a given refinement `level`.
-"""
-function find_patches_square(
-    Snapshot_meta::Snapshot_metadata,
-    points::Union{AbstractMatrix{<:AbstractFloat},Vector{<:AbstractVector{<:AbstractFloat}}},
-    level::Int,
-)
-    mat = _convert_points(points, 4)
-    patches = Patch_NML[]
-    for patch in Snapshot_meta.PATCHES
-        if patch.LEVEL == level && square_intersects_patch(mat, patch)
-            push!(patches, patch)
-        end
-    end
-    return patches
-end
-
-"""
-    find_patches_cube(Snapshot_meta, points)
-
-Return all patches for which the cube defined by `points` intersects the patch.
-`points` can be a 8×3 matrix or a vector of eight 3-component vectors.
+Return patches for which the cube defined by `points` intersects the patch. If
+`all_levels` is `true` patches from all refinement levels are considered. Otherwise,
+the search is restricted to the specified `level` (defaults to
+`Snapshot_meta.LEVELMIN`). `points` can be an 8×3 matrix or a vector of eight
+3-component vectors.
 """
 function find_patches_cube(
     Snapshot_meta::Snapshot_metadata,
-    points::Union{AbstractMatrix{<:AbstractFloat},Vector{<:AbstractVector{<:AbstractFloat}}},
+    points::Union{AbstractMatrix{<:AbstractFloat},Vector{<:AbstractVector{<:AbstractFloat}}};
+    level::Union{Int,Nothing}=nothing,
+    all_levels::Bool=false,
 )
     mat = _convert_points(points, 8)
+    lvl = level === nothing ? Snapshot_meta.LEVELMIN : level
     patches = Patch_NML[]
     for patch in Snapshot_meta.PATCHES
-        if cube_intersects_patch(mat, patch)
-            push!(patches, patch)
-        end
-    end
-    return patches
-end
-
-"""
-    find_patches_cube(Snapshot_meta, points, level)
-
-As above but restricts the search to patches at a given refinement `level`.
-"""
-function find_patches_cube(
-    Snapshot_meta::Snapshot_metadata,
-    points::Union{AbstractMatrix{<:AbstractFloat},Vector{<:AbstractVector{<:AbstractFloat}}},
-    level::Int,
-)
-    mat = _convert_points(points, 8)
-    patches = Patch_NML[]
-    for patch in Snapshot_meta.PATCHES
-        if patch.LEVEL == level && cube_intersects_patch(mat, patch)
+        if (all_levels || patch.LEVEL == lvl) && cube_intersects_patch(mat, patch)
             push!(patches, patch)
         end
     end
@@ -186,43 +158,26 @@ function line_intersects_patch(
 end
 
 """
-    find_patches_line(Snapshot_meta, start_point, end_point)
+    find_patches_line(Snapshot_meta, start_point, end_point; level, all_levels=false)
 
-Return all patches in `Snapshot_meta` for which the line segment
-`start_point` → `end_point` intersects the patch.
+Return patches in `Snapshot_meta` for which the line segment `start_point` →
+`end_point` intersects the patch. If `all_levels` is `true` patches from all
+refinement levels are considered. Otherwise, the search is restricted to the
+specified `level` (defaults to `Snapshot_meta.LEVELMIN`).
 """
 function find_patches_line(
     Snapshot_meta::Snapshot_metadata,
     start_point::AbstractVector{<:AbstractFloat},
-    end_point::AbstractVector{<:AbstractFloat},
+    end_point::AbstractVector{<:AbstractFloat};
+    level::Union{Int,Nothing}=nothing,
+    all_levels::Bool=false,
 )
     @assert length(start_point) == 3 "start_point must have 3 values (x, y, z)"
     @assert length(end_point) == 3 "end_point must have 3 values (x, y, z)"
+    lvl = level === nothing ? Snapshot_meta.LEVELMIN : level
     patches = Patch_NML[]
     for patch in Snapshot_meta.PATCHES
-        if line_intersects_patch(start_point, end_point, patch)
-            push!(patches, patch)
-        end
-    end
-    return patches
-end
-
-"""
-    find_patches_line(Snapshot_meta, start_point, end_point, level)
-
-As above but restricts the search to patches at a given refinement `level`.
-"""
-function find_patches_line(
-    Snapshot_meta::Snapshot_metadata,
-    start_point::AbstractVector{<:AbstractFloat},
-    end_point::AbstractVector{<:AbstractFloat},
-    level::Int,
-)
-    @assert length(start_point) == 3 "start_point must have 3 values (x, y, z)"
-    @assert length(end_point) == 3 "end_point must have 3 values (x, y, z)"
-    patches = Patch_NML[]
-    for patch in Snapshot_meta.PATCHES
-        if patch.LEVEL == level && line_intersects_patch(start_point, end_point, patch)
+        if (all_levels || patch.LEVEL == lvl) && line_intersects_patch(start_point, end_point, patch)
             push!(patches, patch)
         end
     end
