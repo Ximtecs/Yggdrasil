@@ -13,6 +13,7 @@ include("CartesianGrid.jl")
 include("Scaling.jl")
 
 include("LoadPatch.jl")
+include("LoadPatchParticles.jl")
 include("LoadSnapshot.jl")
 include("LoadSnapshotParticles.jl")
 include("LoadMultipleSnapshots.jl")
