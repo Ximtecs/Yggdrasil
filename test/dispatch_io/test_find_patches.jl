@@ -25,24 +25,24 @@ meta = make_snapshot([patch1, patch2, patch3])
 
 @testset "square and cube patch search" begin
     square = [[0.5,0.5,0.5], [1.5,0.5,0.5], [1.5,1.5,0.5], [0.5,1.5,0.5]]
-    patches = find_patches_square(meta, square)
+    patches = find_patches_square(meta, square; all_levels=true)
     @test length(patches) == 3
-    patches_lvl = find_patches_square(meta, square, 1)
+    patches_lvl = find_patches_square(meta, square; level=1)
     @test Set(p.ID for p in patches_lvl) == Set([2,3])
 
     cube = [[1.2,0.2,0.2],[1.8,0.2,0.2],[1.8,0.8,0.2],[1.2,0.8,0.2],
             [1.2,0.2,0.8],[1.8,0.2,0.8],[1.8,0.8,0.8],[1.2,0.8,0.8]]
-    cube_patches = find_patches_cube(meta, cube)
+    cube_patches = find_patches_cube(meta, cube; all_levels=true)
     @test length(cube_patches) == 1 && cube_patches[1].ID == 2
-    cube_lvl = find_patches_cube(meta, cube, 1)
+    cube_lvl = find_patches_cube(meta, cube; level=1)
     @test length(cube_lvl) == 1 && cube_lvl[1].ID == 2
 end
 
 @testset "line patch search" begin
     startp = [-0.5,0.5,0.5]
     endp   = [1.2,0.5,0.5]
-    line_patches = find_patches_line(meta, startp, endp)
+    line_patches = find_patches_line(meta, startp, endp; all_levels=true)
     @test Set(p.ID for p in line_patches) == Set([1,2])
-    line_lvl = find_patches_line(meta, startp, endp, 1)
+    line_lvl = find_patches_line(meta, startp, endp; level=1)
     @test length(line_lvl) == 1 && line_lvl[1].ID == 2
 end
