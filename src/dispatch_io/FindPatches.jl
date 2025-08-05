@@ -1,33 +1,53 @@
 # Functions for locating patches intersected by squares, cubes, or lines
 
 """
-    square_intersects_patch(points, patch)
+    square_contains_patch(points, patch)
 
-Return `true` if the axis-aligned bounding box formed by `points` intersects the
-bounding box of `patch`.
+Return `true` if the axis-aligned square defined by `points` fully contains the
+patch in the two in-plane directions and intersects the square's plane.
 """
-function square_intersects_patch(
+function square_contains_patch(
     points::Union{AbstractMatrix{<:AbstractFloat},Vector{<:AbstractVector{<:AbstractFloat}}},
     patch::Patch_NML,
 )
     mat = _convert_points(points, 4)
     mins, maxs = _bounding_box(mat)
-    return _boxes_intersect(mins, maxs, patch)
+    ranges = maxs .- mins
+    naxis = argmin(ranges)
+    plane = mat[1, naxis]
+    if patch.LLC_NAT[naxis] > plane || patch.LLC_NAT[naxis] + patch.SIZE[naxis] < plane
+        return false
+    end
+    for ax in setdiff(1:3, naxis)
+        pmin = patch.LLC_NAT[ax]
+        pmax = patch.LLC_NAT[ax] + patch.SIZE[ax]
+        if pmin < mins[ax] || pmax > maxs[ax]
+            return false
+        end
+    end
+    return true
 end
 
 """
-    cube_intersects_patch(points, patch)
+    cube_contains_patch(points, patch)
 
-Return `true` if the axis-aligned bounding box formed by `points` intersects the
-bounding box of `patch`.
+Return `true` if the axis-aligned cube defined by `points` fully contains the
+patch.
 """
-function cube_intersects_patch(
+function cube_contains_patch(
     points::Union{AbstractMatrix{<:AbstractFloat},Vector{<:AbstractVector{<:AbstractFloat}}},
     patch::Patch_NML,
 )
     mat = _convert_points(points, 8)
     mins, maxs = _bounding_box(mat)
-    return _boxes_intersect(mins, maxs, patch)
+    pmin = patch.LLC_NAT
+    pmax = patch.LLC_NAT .+ patch.SIZE
+    for i in 1:3
+        if pmin[i] < mins[i] || pmax[i] > maxs[i]
+            return false
+        end
+    end
+    return true
 end
 
 function _convert_points(points, expected_rows)
@@ -46,8 +66,8 @@ function _convert_points(points, expected_rows)
 end
 
 function _bounding_box(mat)
-    mins = vec(reduce(min, eachcol(mat)))
-    maxs = vec(reduce(max, eachcol(mat)))
+    mins = [minimum(col) for col in eachcol(mat)]
+    maxs = [maximum(col) for col in eachcol(mat)]
     return mins, maxs
 end
 
@@ -66,11 +86,11 @@ end
 """
     find_patches_square(Snapshot_meta, points; level, all_levels=false)
 
-Return patches for which the square defined by `points` intersects the patch. If
-`all_levels` is `true` patches from all refinement levels are considered. Otherwise,
-the search is restricted to the specified `level` (defaults to
-`Snapshot_meta.LEVELMIN`). `points` can be a 4×3 matrix or a vector of four
-3-component vectors.
+Return patches for which the square defined by `points` fully contains the patch
+in-plane and intersects the square's plane. If `all_levels` is `true` patches from
+all refinement levels are considered. Otherwise, the search is restricted to the
+specified `level` (defaults to `Snapshot_meta.LEVELMIN`). `points` can be a 4×3
+matrix or a vector of four 3-component vectors.
 """
 function find_patches_square(
     Snapshot_meta::Snapshot_metadata,
@@ -82,7 +102,7 @@ function find_patches_square(
     lvl = level === nothing ? Snapshot_meta.LEVELMIN : level
     patches = Patch_NML[]
     for patch in Snapshot_meta.PATCHES
-        if (all_levels || patch.LEVEL == lvl) && square_intersects_patch(mat, patch)
+        if (all_levels || patch.LEVEL == lvl) && square_contains_patch(mat, patch)
             push!(patches, patch)
         end
     end
@@ -92,7 +112,7 @@ end
 """
     find_patches_cube(Snapshot_meta, points; level, all_levels=false)
 
-Return patches for which the cube defined by `points` intersects the patch. If
+Return patches for which the cube defined by `points` fully contains the patch. If
 `all_levels` is `true` patches from all refinement levels are considered. Otherwise,
 the search is restricted to the specified `level` (defaults to
 `Snapshot_meta.LEVELMIN`). `points` can be an 8×3 matrix or a vector of eight
@@ -108,7 +128,7 @@ function find_patches_cube(
     lvl = level === nothing ? Snapshot_meta.LEVELMIN : level
     patches = Patch_NML[]
     for patch in Snapshot_meta.PATCHES
-        if (all_levels || patch.LEVEL == lvl) && cube_intersects_patch(mat, patch)
+        if (all_levels || patch.LEVEL == lvl) && cube_contains_patch(mat, patch)
             push!(patches, patch)
         end
     end
