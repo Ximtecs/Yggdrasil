@@ -187,6 +187,7 @@ function plot_heatmap_axis(ax::PyCall.PyObject, data::AbstractArray{<:Real,2}; k
 end
 
 
+
 """
     process_axis_kwargs(kwargs, idx)
 
@@ -321,6 +322,131 @@ function plot_heatmaps(
         return fig, axes
     elseif !kw[:save]
         display(fig)
+    end
+end
+
+
+"""
+    animate_heatmaps(data4d, nrows, ncols, indices; kwargs...)
+
+Create an animation of heatmaps from a 4D dataset. The first three
+arguments mirror the 4D `plot_heatmaps` call but omit the `timeslot`
+parameter. All time slices are animated sequentially.
+
+# Arguments
+- `data4d::AbstractArray{<:Real,4}`: 4D data (x, y, variable, time).
+- `nrows::Integer`, `ncols::Integer`: Subplot grid dimensions.
+- `indices::Union{Integer, AbstractVector{<:Integer}}`: Variable indices
+  to plot in each subplot, in row-major order.
+
+# Keyword Arguments
+In addition to the kwargs supported by `plot_heatmap_axis` (with `_all`
+variants for per-axis values), the following animation options are
+available:
+- `:figsize`::Tuple — Figure size in inches, default `(6*ncols, 5*nrows)`.
+- `:save`::Bool — Whether to save the animation, default `false`.
+- `:figname`::String — Filename if `save=true`, default `"heatmaps.mp4"`.
+- `:fps`::Int — Frames per second when saving, default `5`.
+- `:interval`::Int — Delay between frames in milliseconds, default `200`.
+- `:dpi`::Int — Resolution when saving, default `150`.
+- `:fixed_clims`::Bool — If `true`, color limits are fixed using the
+  global min/max of each dataset, default `true`.
+- `:return_objects`::Bool — Return `(fig, axes, anim)` instead of
+  displaying/saving, default `false`.
+
+# Returns
+- If `return_objects=true`, returns `(fig, axes, anim)`.
+- Otherwise, saves or displays the animation as specified.
+"""
+function animate_heatmaps(
+    data4d::AbstractArray{<:Real,4},
+    nrows::Integer,
+    ncols::Integer,
+    indices::Union{Integer, AbstractVector{<:Integer}};
+    kwargs...
+)
+    # Normalize indices
+    nplots = nrows * ncols
+    idx_vec = isa(indices, Integer) ? [indices] : collect(indices)
+    nreq = length(idx_vec)
+
+    if nreq > nplots
+        error("Number of subplot requests ($(nreq)) exceeds available subplots ($(nplots)).")
+    elseif nreq < nplots
+        @warn "Number of subplot requests ($(nreq)) is less than available subplots ($(nplots)). Remaining subplots will be empty."
+    end
+
+    # Time information
+    nsteps = size(data4d, 4)
+
+    # Merge defaults
+    defaults = Dict(
+        :figsize => (6*ncols, 5*nrows),
+        :save => false,
+        :figname => "heatmaps.mp4",
+        :fps => 5,
+        :interval => 200,
+        :dpi => 150,
+        :fixed_clims => true,
+        :return_objects => false,
+    )
+    kw = merge(defaults, Dict(kwargs...))
+
+    # Create figure and axes
+    fig, axarr = subplots(nrows, ncols; figsize=kw[:figsize])
+    axes = [axarr[r, c] for r in 1:nrows for c in 1:ncols]
+
+    # Precompute global colour limits if requested
+    clims = [(minimum(data4d[:, :, idx, :]), maximum(data4d[:, :, idx, :])) for idx in idx_vec]
+
+    ims = Vector{PyCall.PyObject}(undef, nreq)
+    user_clim = falses(nreq)
+
+    # Initial plot for each subplot
+    for i in 1:min(nreq, nplots)
+        ax = axes[i]
+        local_kwargs = process_axis_kwargs(kw, i)
+        user_clim[i] = haskey(local_kwargs, :colorbar_lim)
+        if kw[:fixed_clims] && !user_clim[i]
+            local_kwargs[:colorbar_lim] = clims[i]
+        end
+        data2d = data4d[:, :, idx_vec[i], 1]
+        im, _ = plot_heatmap_axis(ax, data2d; local_kwargs...)
+        ims[i] = im
+    end
+
+    # Hide unused axes
+    if nreq < nplots
+        for i in (nreq+1):nplots
+            axes[i].axis("off")
+        end
+    end
+
+    anim_mod = pyimport("matplotlib.animation")
+
+    function update(it)
+        for i in 1:nreq
+            data2d = data4d[:, :, idx_vec[i], it]
+            ims[i].set_data(data2d')
+            if !kw[:fixed_clims] && !user_clim[i]
+                vmin, vmax = minimum(data2d), maximum(data2d)
+                ims[i].set_clim(vmin, vmax)
+            end
+        end
+        fig.suptitle(@sprintf("Timestep %d", it), fontsize=16)
+        return nothing
+    end
+
+    anim = anim_mod.FuncAnimation(fig, update, frames=1:nsteps, interval=kw[:interval])
+
+    if kw[:save]
+        anim[:save](kw[:figname], fps=kw[:fps], dpi=kw[:dpi])
+        println("Animation saved as $(kw[:figname])")
+    end
+    if kw[:return_objects]
+        return fig, axes, anim
+    elseif !kw[:save]
+        display(anim)
     end
 end
 
