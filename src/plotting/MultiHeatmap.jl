@@ -288,8 +288,11 @@ function plot_heatmaps(
 
     # Create figure and axes using merged figsize
     fig, axarr = subplots(nrows, ncols; figsize=kw[:figsize])
-    #axes = vec(axarr)
-    axes = [axarr[r, c] for r in 1:nrows for c in 1:ncols]
+  if nrows ==1 || ncols == 1
+        axes = vec(axarr)
+    else
+        axes = [axarr[r, c] for r in 1:nrows for c in 1:ncols]
+    end
 
     # Plot each requested slice
     for i in 1:min(nin, nplots)
@@ -385,9 +388,11 @@ function plot_heatmaps(
 
     # Create figure
     fig, axarr = subplots(nrows, ncols; figsize=kw[:figsize])
-    #axes = vec(axarr)
-    axes = [axarr[r, c] for r in 1:nrows for c in 1:ncols]
-
+    if nrows ==1 || ncols == 1
+        axes = vec(axarr)
+    else
+        axes = [axarr[r, c] for r in 1:nrows for c in 1:ncols]
+    end
     # Plot requested slices
     for i in 1:min(nreq, nplots)
         ax = axes[i]
