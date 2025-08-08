@@ -126,7 +126,7 @@
         #------- structs ------------------
         #----------------------------------
         #------- functions ----------------
-        export plot_heatmap, plot_heatmaps
+        export plot_heatmap, plot_heatmaps, animate_heatmaps
         export plot_line, plot_lines
         #----------------------------------
     #---------------------------------------------------------- 
